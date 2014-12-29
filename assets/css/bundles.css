@@ -1,0 +1,58 @@
+@CHARSET "UTF-8";
+
+.productbundles_wrapper{}
+
+.productbundles_header{
+	display:block;
+}
+
+.productbundles_wrapper span.addtocart-button{
+	margin-top:40px;
+}
+
+.productbundles_wrapper input.addtocart-button{
+	width:auto !important;
+}
+	
+.productbundles_item_wrapper{
+	display:inline-block;	
+	float:left;
+}
+
+
+.productbundles_item_wrapper_inside{
+	float:left;
+	padding:10px 15px;
+}
+
+.productbundles_productimage_link img{
+	display:block;
+	padding:5px;
+}
+
+.productbundles_productimage_link img:hover{
+	padding:4px;
+	border:1px solid #cccccc;
+}
+
+.productbundles_productprice .PricebasePriceWithTax{
+	text-decoration: line-through;
+}
+
+.productbundles_discount{
+	color:#ff0000;
+}
+
+.productbundles_productcustomfields{
+	min-height:60px;
+	clear:both;
+}
+
+.productbundles_product_separator{
+	display:inline-block;
+	float:left;
+	height:35px;
+	width:35px;
+	margin-top:40px;
+	background:url(../images/circle_plus.png) no-repeat center;
+}

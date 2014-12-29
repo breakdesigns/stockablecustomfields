@@ -1,0 +1,92 @@
+@CHARSET "UTF-8";
+@font-face {
+  font-family: 'fontello';
+  src: url('../font/fontello/fontello.eot?95519262');
+  src: url('../font/fontello/fontello.eot?95519262#iefix') format('embedded-opentype'),
+       url('../font/fontello/fontello.woff?95519262') format('woff'),
+       url('../font/fontello/fontello.ttf?95519262') format('truetype'),
+       url('../font/fontello/fontello.svg?95519262#fontello') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+/* Chrome hack: SVG is rendered more smooth in Windozze. 100% magic, uncomment if you need it. */
+/* Note, that will break hinting! In other OS-es font will be not as sharp as it could be */
+/*
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: 'fontello';
+    src: url('../font/fontello.svg?1822261#fontello') format('svg');
+  }
+}
+*/
+ 
+ [class^="bdicon-"]:before, [class*=" bdicon-"]:before {
+  font-family: "fontello";
+  font-style: normal;
+  font-weight: normal;
+  speak: none;
+ 
+  display: inline-block;
+  text-decoration: inherit;
+  width: 1em;
+  margin-right: .2em;
+  text-align: center;
+  /* opacity: .8; */
+ 
+  /* For safety - reset parent styles, that can break glyph codes*/
+  font-variant: normal;
+  text-transform: none;
+     
+  /* fix buttons height, for twitter bootstrap */
+  line-height: 1em;
+ 
+  /* Animation center compensation - margins should be symmetric */
+  /* remove if not needed */
+  margin-left: .2em;
+ 
+  /* you can be more comfortable with increased icons size */
+  /* font-size: 120%; */
+ 
+  /* Uncomment for 3D effect */
+  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+}
+ 
+
+.breakdesigns_btn{
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    text-decoration:none !important;
+    background-color: #F5F5F5;
+    background-image: linear-gradient(to bottom, #FFFFFF, #E6E6E6);
+    background-repeat: repeat-x;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) #A3A3A3;
+    border-image: none;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+    color: #333333 !important;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 0;
+    padding: 4px 12px;
+    text-align: center;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+}
+
+.breakdesigns_btn:hover, .breakdesigns_btn:focus, .breakdesigns_btn:active, .breakdesigns_btn.active{
+   background-position: 0 -15px;
+    color: #333333;
+    text-decoration: none;
+    transition: background-position 0.1s linear 0s;
+}
+
+.bdicon-plus:before { content: '\e801'; } /* 'î ' */
+.bdicon-plus-circled:before { content: '\e800'; } /* 'î €' */
+.bdicon-cancel:before { content: '\e803'; } /* 'î ƒ' */
+.bdicon-cancel-circled:before { content: '\e802'; } /* 'î ‚' */
+.bdicon-move:before { content: '\e804'; } /* '' */
