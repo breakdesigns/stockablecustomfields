@@ -84,8 +84,15 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		if(empty($product_id)){
 			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLEASE_SAVE_PRODUCT').'</span></div>';
 			return;
-		}		
-
+		}
+		$product=$this->getProduct($product_id);
+		
+		//do not display to child products
+		if($product->product_parent_id>0){
+			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLUGIN_ASSIGNED').'</span></div>';
+			return;
+		}
+		
 		$html='';
 		$parent_custom_id=$field->virtuemart_custom_id;
 		$customfield=CustomfieldStockablecustomfields::getInstance($parent_custom_id);
@@ -93,21 +100,30 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		//the customs that consists the stockable
 		$custom_ids=$custom_params['custom_id'];
 
-		if(!empty($custom_ids) && is_array($custom_ids)){			
+		if(!empty($custom_ids) && is_array($custom_ids)){
+			$html.='<div style="display:block; clear:both; width:100%;" class="stockable_customfield_wrapper">';
+			$html.='<table class="table">';
 			foreach ($custom_ids as $custom_id){
 				$subcustomfield=false;
 				$custom=CustomfieldStockablecustomfields::getCustom($custom_id);
-				if(!empty($field->child_product_id))$subcustomfield=CustomfieldStockablecustomfields::getCustomfields($field->child_product_id,$custom_id);
-				
-				if($custom->field_type!='E'){ print_r($subcustomfield);
+				if(!empty($field->child_product_id)){
+					//get the other fields 
+					$subcustomfields=CustomfieldStockablecustomfields::getCustomfields($field->child_product_id,$custom_id);
+					$subcustomfield=reset($subcustomfields);
+				}
+
+				if($custom->field_type!='E'){
 					$value='';
-					if(!empty($subcustomfield))$value=$subcustomfield->customfield_value;
+					!empty($subcustomfield->customfield_value)?$value=$subcustomfield->customfield_value:$value='';					
 					$html.='<div style="display:block; clear:both; width:100%;" class="stockable_customfield_wrapper">';
-					$html.='<label for="'.$row.'_'.$custom_id.'" class="">'.JText::_($custom->custom_title).'</label>';
-					$html.='<input type="text" value="'.$value.'" name="'.$this->_product_paramName.'['.$row.']['.$this->_name.']['.$custom_id.'][value]" id="'.$row.'_'.$custom_id.'"/>';
-					$html.='</div>';
+					$html.='<tr>';
+					$html.='<td><label for="'.$row.'_'.$custom_id.'" class="">'.JText::_($custom->custom_title).'</label></td>';
+					$html.='<td><input type="text" value="'.$value.'" name="'.$this->_product_paramName.'['.$row.']['.$this->_name.']['.$custom_id.'][value]" id="'.$row.'_'.$custom_id.'"/></td>';
+					$html.='</tr>';
 				}
 			}
+			$html.='</table>';
+			$html.='</div>';
 			$html.='<input type="hidden" value="'.$row.'" name="'.$this->_product_paramName.'['.$row.'][row]"/>';
 			$html.='<input type="hidden" value="'.$field->child_product_id.'" name="'.$this->_product_paramName.'['.$row.'][child_product_id]" />';
 
@@ -116,7 +132,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$child_product=$this->getProduct($field->child_product_id);
 				if(!empty($child_product)){
 					//set price display
-					$this->setPriceDisplay($child_product);					
+					$this->setPriceDisplay($child_product);
 					$html.='<table class="table table-bordered" width="100%">
 					<thead>
 					<tr>
@@ -145,6 +161,21 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$retValue=$html;
 		return true;
 	}
+	
+	/**
+	 * Proxy function to get a product
+	 *
+	 * @param int $id
+	 *
+	 * @return	JTable	 A database object
+	 * @since	1.0
+	 * @author	Sakis Terz
+	 */
+	function getProduct($id){
+		$productModel=VmModel::getModel('Product');
+		$product = $productModel->getProduct ($id, false, false, false);
+		return $product;
+	}
 
 	/**
 	 * Store the custom fields for a specific product
@@ -170,20 +201,40 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			if(!$this->isValidInput($plugin_param['stockablecustomfields']))return false;
 
 			$row=$plugin_param['row'];
+			$product_id=(int)$data['virtuemart_product_id'];
+			
+			//do not store on child products
+			$product=$this->getProduct($product_id);
+			if($product->product_parent_id>0)return;
+			
 			$virtuemart_customfield_id=$data['field'][$row]['virtuemart_customfield_id'];
+			//new record without customfield id
+			if(empty($virtuemart_customfield_id)){
+				//get it from the db
+				$virtuemart_customfield_ids=CustomfieldStockablecustomfields::getCustomfields($product_id);
+				vmdebug('Stockables - virtuemart_customfield_ids',$virtuemart_customfield_ids);
+				if($virtuemart_customfield_ids[$row]->virtuemart_custom_id==$custom_id){
+					$virtuemart_customfield_id=$virtuemart_customfield_ids[$row]->virtuemart_customfield_id;
+					//$plugin_param[]
+				}
+				//vmdebug('Stockables - customfield_id for custom_id '.$custom_id.' and position '.$position[$custom_id].': ',$customfield_id);
+			}
+				
+			//vmdebug('Stocakbles - $plugin_param:',$plugin_param);
 			$child_product_id=$plugin_param['child_product_id'];
 			if(empty($child_product_id)){
 				$child_product_id=$this->createChildProduct($data,$plugin_param);
-				if(empty($child_product_id)){
-					vmdebug('Child Product Cannot Created for the custom field:',$virtuemart_customfield_id);
+				//could not create child
+				if(empty($child_product_id)){					
 					return false;
 				}
 				//update the params in the customfield
-				CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$child_product_id.'"|');
+				$upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$child_product_id.'"|');
+				vmdebug('Stockables - Master Product\'s custom field params update status:',$upated);
 			}
 
 			//we have child product. Let's give it custom fields or update the existings
-			if(!empty($child_product_id)){				
+			if(!empty($child_product_id)){
 				//store the custom fields to the child product
 				$result=$this->storeCustomFields($child_product_id,$plugin_param['stockablecustomfields']);
 			}
@@ -201,25 +252,12 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 */
 	function isValidInput($input){
 		foreach ($input as $custom_id=>$inp){
-			if(empty($inp['value']))return false;
+			$value= JString::trim($inp['value']);
+			if(empty($value))return false;
 		}
 		return true;
 	}
-
-	/**
-	 * Proxy function to get a product
-	 *
-	 * @param int $id
-	 *
-	 * @return	JTable	 A database object
-	 * @since	1.0
-	 * @author	Sakis Terz
-	 */
-	function getProduct($id){
-		$productModel=VmModel::getModel('Product');
-		$product = $productModel->getProduct ($id, false, false, false);
-		return $product;
-	}
+	
 
 	/**
 	 *
@@ -234,7 +272,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @author	Sakis Terz
 	 */
 	function createChildProduct($data,$plugin_param){
-		vmdebug('plugin params:', $plugin_param['stockablecustomfields']);
+		vmdebug('Stockables - plugin params:', $plugin_param['stockablecustomfields']);
 		//set the parent product and reset the product id
 		$data['product_parent_id']=(int)$data['virtuemart_product_id'];
 		unset($data['virtuemart_product_id']);
@@ -249,6 +287,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		//call the products model to create a child product
 		$productModel=VmModel::getModel('Product');
 		$productTable = $productModel->getTable ('products');
+		//set a new slug
 		$productTable->checkCreateUnique('#__virtuemart_products_' . VmConfig::$vmlang,'slug');
 		$data->slug=$productTable->slug;
 
@@ -257,31 +296,17 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 
 	}
 
-	/**
-	 * Sets the price display for a product
-	 *
-	 * @param 	JTable	A database object $product
-	 * @since	1.0
-	 * @author	Sakis Terz
-	 */
-	function getCustomfields($product){
-		if(empty($product->allPrices[$product->selectedPrice]['product_price']))return;
-		$vendor_model = VmModel::getModel('vendor');
-		$vendor_model->setId($product->virtuemart_vendor_id);
-		$vendor = $vendor_model->getVendor();
-		$vendor_model = VmModel::getModel('vendor');
-		$currencyDisplay = CurrencyDisplay::getInstance($vendor->vendor_currency,$vendor->virtuemart_vendor_id);
-		$product->product_price_display = $currencyDisplay->priceDisplay($product->allPrices[$product->selectedPrice]['product_price'],(int)$product->allPrices[$product->selectedPrice]['product_currency'],1,true);
-	}
 
 	/**
 	 * Sets the price display for a product
 	 *
 	 * @param 	JTable	A database object $product
+	 * 
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
 	function setPriceDisplay(&$product){
+		$product->product_price_display='';
 		if(empty($product->allPrices[$product->selectedPrice]['product_price']))return;
 		$vendor_model = VmModel::getModel('vendor');
 		$vendor_model->setId($product->virtuemart_vendor_id);
@@ -296,6 +321,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 *
 	 * @param 	int $product_id
 	 * @param 	array $customsfields
+	 * 
+	 * @todo	It saves the same custom values again and again. Use either the customfield_id or the custom_id-product_id key to track a value and update it
 	 *
 	 * @since	1.0
 	 * @author	Sakis Terz
@@ -308,7 +335,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 
 			foreach ($customsfields as $custom_id=>$customf){
 				$tableCustomfields = $customfieldModel->getTable('product_customfields');
-				//$tableCustomfields->setPrimaryKey('virtuemart_product_id');
+				$tableCustomfields->setPrimaryKey('virtuemart_product_id');
 				$tableCustomfields->_xParams = 'customfield_params';
 				$data=array();
 				$data['virtuemart_product_id']=$product_id;
@@ -317,10 +344,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$result=$tableCustomfields->bindChecknStore($data);
 
 				if(!$result){
-					vmdebug('Custom id:'.$custom_id.' Not Saved to Product:',$product_id);
+					vmdebug('Stockables - Custom id:'.$custom_id.' Not Saved to Product:',$product_id);
 					//return false;
 				}
-				vmdebug('Custom Value:'.$custom_id.':'.$customf['value'].' Saved to Product:'.$product_id);
+				vmdebug('Stockables - Custom Value:'.$custom_id.':'.$customf['value'].' Saved to Product:'.$product_id);
 				unset($tableCustomfields);
 			}
 		}

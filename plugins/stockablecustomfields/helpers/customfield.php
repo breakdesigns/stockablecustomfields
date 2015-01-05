@@ -118,10 +118,11 @@ Class CustomfieldStockablecustomfields{
 	/**
 	 * Updates fields in the virtuemart_product_customfields table
 	 *
-	 * @param int		$customfield_id
-	 * @param string	$field
-	 * @param mixed 	$value
+	 * @param 	int		$customfield_id
+	 * @param 	string	$field
+	 * @param 	mixed 	$value
 	 * 
+	 * @return	mixed	 mixed A database cursor resource on success, boolean false on failure. 
 	 * @since	1.0
 	 */
 	public static function updateCustomfield($customfield_id,$field='customfield_params',$value=''){
@@ -130,11 +131,12 @@ Class CustomfieldStockablecustomfields{
 		$q=$db->getQuery(true);
 		$q->update('#__virtuemart_product_customfields')->set($db->quoteName($field).'='.$db->quote($value))->where('virtuemart_customfield_id='.(int)$customfield_id);
 		$db->setQuery($q);
-		$db->query();
+		$result=$db->query();
+		return $result;
 	}
 	
 	/**
-	 * Gets a custom field from the database
+	 * Gets the custom fields of a product from the database
 	 * 
 	 * @param 	int 	$product_id
 	 * @param 	int 	$custom_id
@@ -142,14 +144,16 @@ Class CustomfieldStockablecustomfields{
 	 * @return	JTable	 A database object
 	 * @since	1.0
 	 */
-	public static function getCustomfields($product_id,$custom_id){
-		if(empty($product_id) || empty($custom_id))return false;
+	public static function getCustomfields($product_id,$custom_id=0){
+		if(empty($product_id))return false;
 		$db=JFactory::getDbo();
 		$q=$db->getQuery(true);
-		$q->select('*')->from('#__virtuemart_product_customfields AS pc')->where('virtuemart_product_id='.(int)$product_id.' AND pc.virtuemart_custom_id='.(int)$custom_id);
+		$q->select('*')->from('#__virtuemart_product_customfields AS pc')->where('virtuemart_product_id='.(int)$product_id);
+		if(!empty($custom_id))$q->where('pc.virtuemart_custom_id='.(int)$custom_id);
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
+		$q->order('pc.ordering ASC');
 		$db->setQuery($q);
-		$result=$db->loadObject();
+		$result=$db->loadObjectList();
 		return $result;
-	}
+	}	
 }
