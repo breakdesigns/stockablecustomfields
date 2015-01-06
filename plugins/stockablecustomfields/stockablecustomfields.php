@@ -87,11 +87,20 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		}
 		$product=$this->getProduct($product_id);
 		
-		//do not display to child products
+		//do not display in child products
 		if($product->product_parent_id>0){
 			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLUGIN_ASSIGNED').'</span></div>';
 			return;
 		}
+		
+		//check if there is a child product derived from this customfield
+		$child_product_id=0;
+		if(!empty($field->child_product_id)){
+			$child_product=$this->getProduct($field->child_product_id);
+			//it can return an empty product object, even if it does not exist
+			if(empty($child_product->product_parent_id))$child_product=false;
+		}
+		if(!empty($child_product))$child_product_id=$field->child_product_id;
 		
 		$html='';
 		$parent_custom_id=$field->virtuemart_custom_id;
@@ -100,9 +109,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		//the customs that consists the stockable
 		$custom_ids=$custom_params['custom_id'];
 
-		if(!empty($custom_ids) && is_array($custom_ids)){
-			$html.='<div style="display:block; clear:both; width:100%;" class="stockable_customfield_wrapper">';
+		if(!empty($custom_ids) && is_array($custom_ids)){			
 			$html.='<table class="table">';
+			
 			foreach ($custom_ids as $custom_id){
 				$subcustomfield=false;
 				$custom=CustomfieldStockablecustomfields::getCustom($custom_id);
@@ -115,7 +124,6 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				if($custom->field_type!='E'){
 					$value='';
 					!empty($subcustomfield->customfield_value)?$value=$subcustomfield->customfield_value:$value='';					
-					$html.='<div style="display:block; clear:both; width:100%;" class="stockable_customfield_wrapper">';
 					$html.='<tr>';
 					$html.='<td><label for="'.$row.'_'.$custom_id.'" class="">'.JText::_($custom->custom_title).'</label></td>';
 					$html.='<td><input type="text" value="'.$value.'" name="'.$this->_product_paramName.'['.$row.']['.$this->_name.']['.$custom_id.'][value]" id="'.$row.'_'.$custom_id.'"/></td>';
@@ -123,38 +131,37 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				}
 			}
 			$html.='</table>';
-			$html.='</div>';
+			
 			$html.='<input type="hidden" value="'.$row.'" name="'.$this->_product_paramName.'['.$row.'][row]"/>';
-			$html.='<input type="hidden" value="'.$field->child_product_id.'" name="'.$this->_product_paramName.'['.$row.'][child_product_id]" />';
+			$html.='<input type="hidden" value="'.$child_product_id.'" name="'.$this->_product_paramName.'['.$row.'][child_product_id]" />';
 
 			//print the child product
-			if(!empty($field->child_product_id)){
-				$child_product=$this->getProduct($field->child_product_id);
-				if(!empty($child_product)){
-					//set price display
-					$this->setPriceDisplay($child_product);
-					$html.='<table class="table table-bordered" width="100%">
-					<thead>
-					<tr>
-					<th>'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_NAME').'</th>
-					<th>'.JText::_('COM_VIRTUEMART_SKU').'</th>					
-					<th>'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_COST').'</th>
-					<th></th>
-					</tr>
-					</thead>
-					<tbody>
-					<tr>
-					<td>'.$child_product->product_name.'</td>
-					<td>'.$child_product->product_sku.'</td>
-					<td>'.$child_product->product_price_display.'</td>
-					<td>
-					<a class="modal btn" role="modal" data-toggle="modal" href="'.JRoute::_('index.php?option=com_virtuemart&view=product&task=edit&tmpl=component&virtuemart_product_id='.$child_product->virtuemart_product_id).'">'.
-					JText::_('JACTION_EDIT').
-					'</td>
-					</tr>
-					</tbody>
-					</table>';
-				}
+			if(!empty($field->child_product_id) && !empty($child_product)){					
+				//set price display
+				$this->setPriceDisplay($child_product);
+				
+				$html.='<table class="table table-bordered" width="100%">
+				<caption>'.JText::_('COM_VIRTUEMART_CUSTOM_PRODUCT_CHILD').'</caption>
+				<thead>
+				<tr>
+				<th>'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_NAME').'</th>
+				<th>'.JText::_('COM_VIRTUEMART_SKU').'</th>					
+				<th>'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_COST').'</th>
+				<th></th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr>
+				<td>'.$child_product->product_name.'</td>
+				<td>'.$child_product->product_sku.'</td>
+				<td>'.$child_product->product_price_display.'</td>
+				<td>
+				<a class="modal btn" role="modal" data-toggle="modal" href="'.JRoute::_('index.php?option=com_virtuemart&view=product&task=edit&tmpl=component&virtuemart_product_id='.$child_product->virtuemart_product_id).'">'.
+				JText::_('JACTION_EDIT').
+				'</td>
+				</tr>
+				</tbody>
+				</table>';				
 			}
 		}
 
@@ -188,20 +195,20 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @since	1.0
 	 */
 	function plgVmOnStoreProduct($data,$plugin_param){
-
 		$plugin_name=key($plugin_param);
 		if($plugin_name!= $this->_name)return;
 		$is_stockablecustomfield=false;
 
-		if(isset($plugin_param[$plugin_name]['virtuemart_custom_id']))$custom_id=$plugin_param[$plugin_name]['virtuemart_custom_id'];
-		else $custom_id=0;
-
+		
 		if($plugin_name=='stockablecustomfields'){
 			$is_stockablecustomfield=true;
 			if(!$this->isValidInput($plugin_param['stockablecustomfields']))return false;
 
 			$row=$plugin_param['row'];
 			$product_id=(int)$data['virtuemart_product_id'];
+			
+			$custom_id=$data['field'][$row]['virtuemart_custom_id'];			
+			
 			
 			//do not store on child products
 			$product=$this->getProduct($product_id);
@@ -210,27 +217,31 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			$virtuemart_customfield_id=$data['field'][$row]['virtuemart_customfield_id'];
 			//new record without customfield id
 			if(empty($virtuemart_customfield_id)){
-				//get it from the db
+				/*
+				 * Get it from the db. 
+				 * This will not be 100% accurate if the same custom is assigned to the child product more than once
+				 */
 				$virtuemart_customfield_ids=CustomfieldStockablecustomfields::getCustomfields($product_id);
-				vmdebug('Stockables - virtuemart_customfield_ids',$virtuemart_customfield_ids);
+				//vmdebug('Stockables - virtuemart_customfield_ids',$virtuemart_customfield_ids);
+								
 				if($virtuemart_customfield_ids[$row]->virtuemart_custom_id==$custom_id){
 					$virtuemart_customfield_id=$virtuemart_customfield_ids[$row]->virtuemart_customfield_id;
-					//$plugin_param[]
 				}
 				//vmdebug('Stockables - customfield_id for custom_id '.$custom_id.' and position '.$position[$custom_id].': ',$customfield_id);
 			}
 				
-			//vmdebug('Stocakbles - $plugin_param:',$plugin_param);
+			
 			$child_product_id=$plugin_param['child_product_id'];
 			if(empty($child_product_id)){
 				$child_product_id=$this->createChildProduct($data,$plugin_param);
+				vmdebug('Stocakbles - $child_product_id:',$child_product_id);
 				//could not create child
 				if(empty($child_product_id)){					
 					return false;
 				}
 				//update the params in the customfield
 				$upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$child_product_id.'"|');
-				vmdebug('Stockables - Master Product\'s custom field params update status:',$upated);
+				vmdebug('Stockables - Master Product\'s custom field\'s '.$virtuemart_customfield_id.'  params update status:',$upated);
 			}
 
 			//we have child product. Let's give it custom fields or update the existings
