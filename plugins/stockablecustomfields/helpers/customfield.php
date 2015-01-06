@@ -57,7 +57,7 @@ Class CustomfieldStockablecustomfields{
 
 	/**
 	 *
-	 * Returns the string of the custom type
+	 * Returns the lang string of the custom type
 	 * @param 	string $key_type
 	 * @return	string
 	 * @since	1.0
@@ -114,15 +114,15 @@ Class CustomfieldStockablecustomfields{
 		}
 		return self::$_customparams[$custom_id];
 	}
-	
+
 	/**
 	 * Updates fields in the virtuemart_product_customfields table
 	 *
 	 * @param 	int		$customfield_id
 	 * @param 	string	$field
 	 * @param 	mixed 	$value
-	 * 
-	 * @return	mixed	 mixed A database cursor resource on success, boolean false on failure. 
+	 *
+	 * @return	mixed	 mixed A database cursor resource on success, boolean false on failure.
 	 * @since	1.0
 	 */
 	public static function updateCustomfield($customfield_id,$field='customfield_params',$value=''){
@@ -134,13 +134,13 @@ Class CustomfieldStockablecustomfields{
 		$result=$db->query();
 		return $result;
 	}
-	
+
 	/**
 	 * Gets the custom fields of a product from the database
-	 * 
+	 *
 	 * @param 	int 	$product_id
 	 * @param 	int 	$custom_id
-	 * 
+	 *
 	 * @return	JTable	 A database object
 	 * @since	1.0
 	 */
@@ -155,5 +155,56 @@ Class CustomfieldStockablecustomfields{
 		$db->setQuery($q);
 		$result=$db->loadObjectList();
 		return $result;
-	}	
+	}
+
+	/**
+	 * Saves customfields to a product
+	 *
+	 * @param 	int $product_id
+	 * @param 	array $customsfields
+	 *
+	 * @todo	It saves the same custom values again and again. Use either the customfield_id or the custom_id-product_id key to track a value and update it
+	 *
+	 * @since	1.0
+	 * @author	Sakis Terz
+	 */
+	public static function storeCustomFields($product_id,$customsfields){
+		$log=array();
+		if(!empty($customsfields)){
+			$customfieldModel=VmModel::getModel('Customfields');
+
+			foreach ($customsfields as $custom_id=>$customf){
+
+				$data=array();
+				$data['virtuemart_product_id']=$product_id;
+				$data['virtuemart_custom_id']=$custom_id;
+				$data['customfield_value']=$customf['value'];
+
+				//get the existing customfields for that product with that custom_id
+				$customfieldz=self::getCustomfields($product_id,$custom_id);
+
+				//exists a record for that product
+				if(!empty($customfieldz[0])){
+					//same customfield same value. Do nothing
+					if($customfieldz[0]->customfield_value==$customf['value'])$result=true;
+					//same customfield different value. Update
+					else $result=self::updateCustomfield($customfieldz[0]->virtuemart_customfield_id,'customfield_value',$customf['value']);
+				}
+				//no customfield record. Insert
+				else {
+					$tableCustomfields = $customfieldModel->getTable('product_customfields');
+					$tableCustomfields->setPrimaryKey('virtuemart_product_id');
+					$tableCustomfields->_xParams = 'customfield_params';
+					$result=$tableCustomfields->bindChecknStore($data);
+				}
+
+				if(!$result){
+					vmdebug('Stockables - Custom id:'.$custom_id.':'.$customf['value'].' Not Saved to Product:',$product_id);
+					//return false;
+				}else vmdebug('Stockables - Custom Value:'.$custom_id.':'.$customf['value'].' Saved to Product:'.$product_id);
+				if(!empty($tableCustomfields))unset($tableCustomfields);
+			}
+		}
+		return true;
+	}
 }
