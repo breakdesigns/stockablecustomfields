@@ -153,7 +153,7 @@ Class CustomfieldStockablecustomfields{
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
 		$q->order('pc.ordering ASC');
 		$db->setQuery($q);
-		$result=$db->loadObjectList();
+		$result=$db->loadObjectList();		
 		return $result;
 	}
 
