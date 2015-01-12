@@ -235,7 +235,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				
 			//do not store on child products
 			$product=$this->getProduct($product_id);
-			if($product->product_parent_id>0)return;
+			if($product->product_parent_id>0)return false;
 				
 			$virtuemart_customfield_id=$data['field'][$row]['virtuemart_customfield_id'];
 			//new record without customfield id
@@ -311,11 +311,11 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	function createChildProduct($data,$plugin_param){
 		//we do not want to store in child products
 		if($data['product_parent_id']>0)return;
-		
+		vmdebug('STOCKABLE Parent id ',$data['virtuemart_product_id']);
 		//set the parent product and reset the product id				
 		$data['product_parent_id']=(int)$data['virtuemart_product_id'];	
 		$data['virtuemart_product_id']=0;	
-		$data['isChild']=true;
+		//$data['isChild']=true;
 		
 		if(!empty($plugin_param['product_name']))$data['product_name']=$plugin_param['product_name'];
 		if(!empty($plugin_param['product_sku']))$data['product_sku']=$plugin_param['product_sku'];
@@ -327,6 +327,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			$data['mprices']['virtuemart_product_price_id']=array();
 			$data['mprices']['virtuemart_product_price_id'][0]=0;		
 		}
+		//vmdebug('Stockable mprices',$data['mprices']);
 		//vmdebug('STOCKABLE PRICES',$data['mprices']);
 		/*
 		 * unset categories and manufacturers
