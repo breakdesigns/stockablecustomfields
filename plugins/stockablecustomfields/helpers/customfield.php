@@ -2,7 +2,7 @@
 /**
  * @version		$Id: customfield.php 2014-12-19 18:57 sakis Terz $
  * @package		stockablecustomfields
- * @copyright	Copyright (C)2014 breakdesigns.net . All rights reserved.
+ * @copyright	Copyright (C)2014-2015 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -10,7 +10,6 @@
  *
  * Class that contains the necessary functions used by the customfield
  * @package		stockablecustomfields
- * @author 		Sakis Terz
  *
  */
 Class CustomfieldStockablecustomfields{
@@ -131,7 +130,14 @@ Class CustomfieldStockablecustomfields{
 		$q=$db->getQuery(true);
 		$q->update('#__virtuemart_product_customfields')->set($db->quoteName($field).'='.$db->quote($value))->where('virtuemart_customfield_id='.(int)$customfield_id);
 		$db->setQuery($q);
-		$result=$db->query();
+		try
+		{
+			$result=$db->query();
+		}
+		catch (RuntimeException $e)
+		{
+			JError::raiseWarning(500, $e->getMessage());
+		}
 		return $result;
 	}
 
@@ -153,7 +159,14 @@ Class CustomfieldStockablecustomfields{
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
 		$q->order('pc.ordering ASC');
 		$db->setQuery($q);
-		$result=$db->loadObjectList();		
+		try
+		{
+			$result=$db->loadObjectList();
+		}
+		catch (RuntimeException $e)
+		{
+			JError::raiseWarning(500, $e->getMessage());
+		}
 		return $result;
 	}
 
@@ -206,5 +219,56 @@ Class CustomfieldStockablecustomfields{
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Gets the custom fields of the a set of products and returns them
+	 *
+	 * @param 	int	$parent_product_id
+	 * @param 	int	$custom_ids
+	 *
+	 * @return	JTable	 A database object
+	 * @since	1.0
+	 */
+	public static function getChildCustomFields($product_ids,$custom_id){
+		if(empty($product_ids) || empty($custom_id))return false;
+		$db=JFactory::getDbo();
+		$q=$db->getQuery(true);
+		$q->select('pcf.virtuemart_customfield_id, pcf.virtuemart_product_id, pcf.virtuemart_custom_id, pcf.customfield_value AS value')
+		->from('#__virtuemart_product_customfields AS pcf')
+		->where('pcf.virtuemart_product_id IN ('.implode(',', $product_ids).') AND pcf.virtuemart_custom_id='.(int)$custom_id)
+		->order('FIELD(pcf.virtuemart_product_id, '.implode(',', $product_ids).'),pcf.ordering');
+		$db->setQuery($q);
+		try
+		{
+			$result=$db->loadObjectList();
+		}
+		catch (RuntimeException $e)
+		{
+			JError::raiseWarning(500, $e->getMessage());
+		}
+		return $result;
+	}
+
+	/**
+	 * Remove duplicate records based on a key
+	 *
+	 * @param 	array $objects		The array of the obejects to be checked
+	 * @param 	string $filter_key	The key based on which will happen the filtration
+	 *
+	 * @since	1.0
+	 */
+	public static function filterUniqueValues($objects,$filter_key='value'){
+		$new_array=array();
+		$value_array=array();
+		foreach ($objects as $key=>$ob){
+			if(in_array($ob->$filter_key, $value_array)){
+				unset($objects[$key]);
+				continue;
+			}
+			$value_array[$key]=$ob->$filter_key;
+		}
+		print_r($objects); echo '<br/>'	, '<br/>';
+		return $objects;
 	}
 }
