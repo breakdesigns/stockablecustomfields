@@ -25,6 +25,5 @@ Do you want to improve it?
 Copyright
 ---------------------
 * Copyright (C) 2015 breakdesigns.net. All rights reserved.
-* [Credits](https://docs.joomla.org/Joomla!_Credits_and_Thanks)
 * Distributed under the GNU General Public License version 2 or later
 * See [License details](https://docs.joomla.org/Joomla_Licenses)
