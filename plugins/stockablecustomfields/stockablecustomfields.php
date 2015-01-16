@@ -373,7 +373,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 *
 	 * @param 	object $product
 	 * @param 	object $group
-	 * 
+	 * @todo	Check the child products against stock if this is dictated by the VM config
+	 *
 	 * @since	1.0
 	 */
 	function plgVmOnDisplayProductFEVM3(&$product,&$group){
@@ -382,14 +383,14 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		//we want this function to run only once. Not for every customfield record
 		static $printed=false;
 		if($printed==true)return;
-		$printed=true;		
-		
+		$printed=true;
+
 		$stockable_customfields=array();
 		$custom_id=$group->virtuemart_custom_id;
 		$customfield=CustomfieldStockablecustomfields::getInstance($custom_id);
 		$custom_params=$customfield->getCustomfieldParams($custom_id);
-		
-		
+
+
 		if(empty($group->pb_group_id))$group->pb_group_id='';
 		$group->custom_params=$custom_params;
 		//the customs that consists the stockable
@@ -399,7 +400,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		//this is the parent
 		if($product->product_parent_id==0)$product_parent_id=$product->virtuemart_product_id;
 		else $product_parent_id=$product->product_parent_id;
-		
+
 		/*
 		 * we need to get the stockable cuctomfields of the parent, to load the child product ids
 		 * We use them to load their custom fields and for the correct order of display of the custom fields
@@ -411,30 +412,66 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			foreach ($customfield_params as $cparam){
 				$item=explode('=', $cparam);
 				if($item[0]=='child_product_id')$child_product_ids[]=json_decode($item[1]);
-			}			
+			}
 		}
-		
+		$viewdata=$group;
+		$viewdata->product=$product;
 
-		foreach ($custom_ids as $cust_id){ 
-			$viewdata=$group;
-			$viewdata->virtuemart_product_id=$product->virtuemart_product_id;
-			$custom=CustomfieldStockablecustomfields::getCustom($cust_id);
-				
-				
-			if($custom->field_type!='E'){
-				//get it from the built in function
-				$stockable_customfields_tmp=CustomfieldStockablecustomfields::getChildCustomFields($child_product_ids, $cust_id);
+		if(!empty($custom_ids)){
+			//wraps all the html generated
+			$html.='<div class="stockablecustomfields_fields_wrapper">';
+			
+			foreach ($custom_ids as $cust_id){
+				$custom=CustomfieldStockablecustomfields::getCustom($cust_id);
+				$viewdata->custom=$custom;
+
+				if($custom->field_type!='E'){
+					//get it from the built in function
+					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getChildCustomFields($child_product_ids, $cust_id);
+					//filter to remove duplicates
+					$stockable_customfields_display=CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);
+					$viewdata->options=$stockable_customfields_display;
+					//cart input
+					if($group->is_input)$html.= $this->renderByLayout($layout,$viewdata);
+				}
 				$stockable_customfields=array_merge($stockable_customfields,$stockable_customfields_tmp);
-				//filter to remove duplicates
-				$stockable_customfields_display=CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);
-				$viewdata->options=$stockable_customfields_display;
-				//cart input
-				if($group->is_input)$html.= $this->renderByLayout($layout,$viewdata);
+			}
+			$html.='</div>';
+			
+			if(!empty($stockable_customfields)){
+				$customfield_product_combinations=CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields);
+				$doc=JFactory::getDocument();
+				//generate the array based on which, it will load the chilc products getting into account the selected fields
+				$script='var stockableCustomFieldsCombinations=\''.json_encode($customfield_product_combinations).'\';';
+				$childproduct_urls=$this->getProductUrls($child_product_ids,$product->virtuemart_category_id);
+				$script.='var stockableCustomFieldsProductUrl=\''.json_encode($childproduct_urls).'\';';
+				$doc->addScriptDeclaration($script);
+				$doc->addScript(JUri::root().'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
+				//Adds a string as script to the end of your document 
+				$script2="var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper'); Stockablecustomfields.setEvents(stockableAreas);";
+				vmJsApi::addJScript ( 'addStockableEvents', $script2);	
 			}
 		}
 
 		$group->display = $html;
 		return true;
+	}
+
+	/**
+	 * Generate urls for a set of products
+	 *
+	 * @param array $product_ids
+	 * @param int $category_id
+	 *
+	 * @return	array
+	 * @since	1.0
+	 */
+	function getProductUrls($product_ids, $category_id){
+		$product_urls=array();
+		foreach ($product_ids as $pid){
+			$product_urls[$pid]=JRoute::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id='.(int)$category_id.'&virtuemart_product_id='.(int)$pid);
+		}
+		return $product_urls;
 	}
 
 }

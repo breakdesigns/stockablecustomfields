@@ -234,7 +234,7 @@ Class CustomfieldStockablecustomfields{
 		if(empty($product_ids) || empty($custom_id))return false;
 		$db=JFactory::getDbo();
 		$q=$db->getQuery(true);
-		$q->select('pcf.virtuemart_customfield_id, pcf.virtuemart_product_id, pcf.virtuemart_custom_id, pcf.customfield_value AS value')
+		$q->select('pcf.virtuemart_customfield_id,pcf.virtuemart_customfield_id AS id, pcf.virtuemart_product_id, pcf.virtuemart_custom_id, pcf.customfield_value AS value')
 		->from('#__virtuemart_product_customfields AS pcf')
 		->where('pcf.virtuemart_product_id IN ('.implode(',', $product_ids).') AND pcf.virtuemart_custom_id='.(int)$custom_id)
 		->order('FIELD(pcf.virtuemart_product_id, '.implode(',', $product_ids).'),pcf.ordering');
@@ -268,7 +268,46 @@ Class CustomfieldStockablecustomfields{
 			}
 			$value_array[$key]=$ob->$filter_key;
 		}
-		print_r($objects); echo '<br/>'	, '<br/>';
+		//print_r($objects); echo '<br/>'	, '<br/>';
 		return $objects;
+	}
+	
+	/**
+	 * Creates arrays with the customfield combinations that generate a product
+	 * 
+	 * @param 	array 	$customfields
+	 * 
+	 * @return	array	
+	 * @since	1.0
+	 */
+	public static function getProductCombinations($customfields){
+		$products=array();
+		$products_final=array();
+		$custom_values=array();
+		foreach ($customfields as $cf){ 
+			/**
+			 * This is a workaround
+			 * Unfortunately the VM native custom fields use the same table for storing the custom_value and the product_id
+			 * That means that in case we have the same value repeated several times (e.g. color:white), this value has different id each time
+			 * Since we can display the value only once in the FE (e.g. color:white) we are using the the 1st found customfield_id for that value
+			 * @todo	Check also the custom id. Maybe it is another custom each time and 2 or more customs use the same values
+			 */
+			if(!isset($custom_values[$cf->virtuemart_custom_id]))$custom_values[$cf->virtuemart_custom_id]=array();
+			if(!in_array($cf->value, $custom_values[$cf->virtuemart_custom_id])){
+				$custom_values[$cf->virtuemart_custom_id][$cf->id]=$cf->value;
+				$id=$cf->id;
+			}
+			else $id=array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
+			if(!isset($products[$cf->virtuemart_product_id]))$products[$cf->virtuemart_product_id]=array();
+			if(!in_array($cf->id, $products[$cf->virtuemart_product_id]))$products[$cf->virtuemart_product_id][]=$id;
+		}
+		//change the form to be easier to handle as json object
+		foreach ($products as $pid=>$p_array){
+			$products_final[]=array('product_id'=>$pid,'customfield_ids'=>$p_array);
+		}
+		
+		$return=new stdClass();
+		$return->combinations=$products_final;
+		return $return;
 	}
 }
