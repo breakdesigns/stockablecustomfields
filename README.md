@@ -6,7 +6,7 @@ Stockable Custom Fields For Virtuemart 3+
 What is this?
 ---------------------
 
-* stockablecustomfields is a plugin that for creating stockable variants (child products) from custom fields assigned to a parent product.
+* stockablecustomfields is a plugin for creating stockable variants (child products) from custom fields assigned to the parent product.
 
 
 What are the benefits of using it?
