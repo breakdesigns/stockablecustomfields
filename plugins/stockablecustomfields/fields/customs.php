@@ -35,7 +35,7 @@ Class JFormFieldCustoms extends JFormField{
 		$jinput=JFactory::getApplication()->input;
 		$virtuemart_custom_id=$jinput->get('virtuemart_custom_id',array(),'ARRAY');
 		if(is_array($virtuemart_custom_id))$virtuemart_custom_id=end($virtuemart_custom_id);
-		if (empty($virtuemart_custom_id)) return '<span style="padding:5px; background-color:#5bc0de; color:#ffffff; border-radius:3px;" class="productbundles_msg">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_SAVE_CUSTOMFIELD_BEFORE_ADDING_CUSTOMS').'<span>';
+		if (empty($virtuemart_custom_id)) return '<div class="alert alert-info"><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_SAVE_CUSTOMFIELD_BEFORE_ADDING_CUSTOMS').'</span></div';
 				
 		$document=JFactory::getDocument();
 		$document->addStyleSheet( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/css/stockables_be.css');
@@ -60,6 +60,7 @@ Class JFormFieldCustoms extends JFormField{
 		
 		//iterate to print the elements
 		if(!empty($selectedElements) && is_array($selectedElements)){
+			$isAssignedToProduct=CustomfieldStockablecustomfields::getCustomfields($product=false,$virtuemart_custom_id,$limit=1); 
 			foreach ($selectedElements as $el){
 				//get the custom		
 				$customObject=CustomfieldStockablecustomfields::getCustom($el);
@@ -70,8 +71,10 @@ Class JFormFieldCustoms extends JFormField{
 					<span class="element_id">'.$el.'</span>
 					<input type="hidden" name="custom_id[]" value="'.$el.'"/>
 					<span class="bd_listtoolbar">						
-						<span class="breakdesigns_btn element_move_btn" title="Drag to Move"><i class="bdicon-move"></i></span>
-						<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>		
+						<span class="breakdesigns_btn element_move_btn" title="Drag to Move"><i class="bdicon-move"></i></span>';
+				//if there are assignments cannot change the custom fields
+				if(empty($isAssignedToProduct))$html.='<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>';		
+				$html.='	
 					</span>
 				</li>';
 			}
@@ -79,16 +82,21 @@ Class JFormFieldCustoms extends JFormField{
 		
 		
 		$html.='</ul>';
-
-		$html.='
-		<div class="elements_toolbar">			
-			<a class="modal btn" role="modal" data-toggle="modal" title="'.JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_DESC').'"
-			href="index.php?option=com_virtuemart&view=custom&layout=stockables&tmpl=component&function=jSelectCustom"
-			onclick="return false;" rel="{handler: \'iframe\', size: {x: 820, y: 550}}">
-			<i class="bdicon-plus-circled"></i>'.
-		JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_LABEL')
-		.'</a>
-		</div>';
+		
+		//if there are assignments cannot change the custom fields
+		if(empty($isAssignedToProduct)){
+			$html.='
+			<div class="elements_toolbar">			
+				<a class="modal btn" role="modal" data-toggle="modal" title="'.JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_DESC').'"
+				href="index.php?option=com_virtuemart&view=custom&layout=stockables&tmpl=component&function=jSelectCustom"
+				onclick="return false;" rel="{handler: \'iframe\', size: {x: 820, y: 550}}">
+				<i class="bdicon-plus-circled"></i>'.
+			JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_LABEL')
+			.'</a>
+			</div>';
+		}else{
+			$html.='<div class="alert alert-info"><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_CANNOT_CHANGE_CUSTOMS_IF_ASSIGNED').'</span><div>';
+		}
 
 		$html.='</div>';
 

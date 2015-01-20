@@ -150,15 +150,16 @@ Class CustomfieldStockablecustomfields{
 	 * @return	JTable	 A database object
 	 * @since	1.0
 	 */
-	public static function getCustomfields($product_id,$custom_id=0){
-		if(empty($product_id))return false;
+	public static function getCustomfields($product_id=0,$custom_id=0,$limit=false){
+		if(empty($product_id)&& empty($custom_id))return false;
 		$db=JFactory::getDbo();
 		$q=$db->getQuery(true);
-		$q->select('*')->from('#__virtuemart_product_customfields AS pc')->where('virtuemart_product_id='.(int)$product_id);
+		$q->select('*')->from('#__virtuemart_product_customfields AS pc');
+		if(!empty($product_id))$q->where('virtuemart_product_id='.(int)$product_id);
 		if(!empty($custom_id))$q->where('pc.virtuemart_custom_id='.(int)$custom_id);
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
-		$q->order('pc.ordering ASC');
-		$db->setQuery($q);
+		$q->order('pc.ordering ASC');		
+		$db->setQuery($q,$offset=false,$limit);
 		try
 		{
 			$result=$db->loadObjectList();

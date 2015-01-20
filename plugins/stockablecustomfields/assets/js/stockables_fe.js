@@ -131,6 +131,6 @@ if (typeof Stockablecustomfields === "undefined") {
 		var combinations=JSON.parse(stockableCustomFieldsCombinations);
 		Stockablecustomfields.combinations=combinations.combinations;
 		Stockablecustomfields.product_urls=JSON.parse(stockableCustomFieldsProductUrl);
-		Stockablecustomfields.setEvents(stockableAreas);
+		//Stockablecustomfields.setEvents(stockableAreas);
 	});
 }
