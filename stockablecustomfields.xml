@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmcustom" method="upgrade">
     <name>Stockable Customfields</name>
-    <creationDate>2014-11-06</creationDate>
+    <creationDate>2015-01-20</creationDate>
   	<author>breadkesigns</author>
 	<authorEmail>info@breakdesigns.net</authorEmail>
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
 	<copyright>Copyright(c) 2014 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
     <version>1.0</version>
-     <description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px">(v.1.0 | 06 November 2014)</i></h3>
-    <span><img src="../plugins/vmcustom/customfieldsforall/assets/images/logo_90.png"/></span>
-    <p style="margin-top:5px; font-size:12px; font-weight:0;">A multi-purpose custom field for Virtuemart</p>
+     <description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px">(v.1.0 | 20 January 2014)</i></h3>
+    <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_90.png"/></span>
+    <p style="margin-top:5px; font-size:12px; font-weight:0;">Stockable Custom Fields for Virtuemart</p>
     <p><a href="http://breakdesigns.net/extensions/customfields-for-all/manual#installation" target="_blank">Please check our Manual to see how to proceed further</a>
     ]]></description>
 
@@ -50,6 +50,12 @@
 		</fieldset>
 	</fields>
 	</config>
-    <params>
-	</params>
+
+     <plugins>
+        <plugin plugin="stockablecustomfields" group="vmcustom" />
+     </plugins>
+
+   <templateoverrides>
+        <templateoverride name="com_virtuemart" client="administrator"></templateoverride>
+   </templateoverrides>
 </extension>
