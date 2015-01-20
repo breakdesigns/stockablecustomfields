@@ -112,8 +112,11 @@ if (typeof Stockablecustomfields === "undefined") {
 						if(jQuery(this).is('select'))jQuery(this).find('option').removeAttr('disabled');
 					})
 				},
-				loadProductPage:function(matchedCombinations){
+				loadProductPage:function(matchedCombinations){					
 					var product_id=matchedCombinations[0].product_id;
+					//the product is already loaded
+					if(currentProductid==product_id)return;
+					
 					var url=Stockablecustomfields.product_urls[product_id];
 					if (typeof Virtuemart !== "undefined"){
 						if (typeof Virtuemart.updateContent == 'function') { 

@@ -141,7 +141,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$this->setPriceDisplay($child_product);
 
 				$html.='
-				<table class="table table-bordered" width="100%">
+				<table class="table table-bordered"  style="width:100%; min-width:450px;">
 				<caption>'.JText::_('COM_VIRTUEMART_CUSTOM_PRODUCT_CHILD').'</caption>
 				<thead>
 				<tr>
@@ -167,7 +167,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			//no child product. Print a form
 			else{
 				$html.='
-				<table class="table table-bordered" width="100%">
+				<table class="table table-bordered" style="width:100%; min-width:450px;">
 				<caption>'.JText::_('COM_VIRTUEMART_CUSTOM_PRODUCT_CHILD').'</caption>
 				<thead>
 				<tr>
@@ -380,7 +380,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	function plgVmOnDisplayProductFEVM3(&$product,&$group){
 		if ($group->custom_element != $this->_name) return '';
 		$html='';
-		//we want this function to run only once. Not for every customfield record
+		//we want this function to run only once. Not for every customfield record of this type
 		static $printed=false;
 		if($printed==true)return;
 		$printed=true;
@@ -417,7 +417,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$viewdata=$group;
 		$viewdata->product=$product;
 
-		if(!empty($custom_ids)){
+		if(!empty($custom_ids) && !empty($child_product_ids)){
+			$child_product_ids=CustomfieldStockablecustomfields::getOrderableProducts($child_product_ids);
 			//wraps all the html generated
 			$html.='<div class="stockablecustomfields_fields_wrapper">';
 			
@@ -427,19 +428,24 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 
 				if($custom->field_type!='E'){
 					//get it from the built in function
-					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getChildCustomFields($child_product_ids, $cust_id);
-					//filter to remove duplicates
-					$stockable_customfields_display=CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);
+					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getCustomfields($child_product_ids,$cust_id);
+					$stockable_customfields_display=array();
+					if(!empty($stockable_customfields_tmp)){
+						//filter to remove duplicates
+						$stockable_customfields_display=CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);						
+					}					
+					$stockable_customfields_display=CustomfieldStockablecustomfields::setSelected($stockable_customfields_display,$product);
 					$viewdata->options=$stockable_customfields_display;
 					//cart input
 					if($group->is_input)$html.= $this->renderByLayout($layout,$viewdata);
 				}
-				$stockable_customfields=array_merge($stockable_customfields,$stockable_customfields_tmp);
+				if(!empty($stockable_customfields_tmp))$stockable_customfields=array_merge($stockable_customfields,$stockable_customfields_tmp);
 			}
 			$html.='</div>';
 			
+			//print the scripts for the fe
 			if(!empty($stockable_customfields)){
-				$customfield_product_combinations=CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields);
+				$customfield_product_combinations=CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields);				
 				$doc=JFactory::getDocument();
 				//generate the array based on which, it will load the chilc products getting into account the selected fields
 				$script='var stockableCustomFieldsCombinations=\''.json_encode($customfield_product_combinations).'\';';
@@ -448,7 +454,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$doc->addScriptDeclaration($script);
 				$doc->addScript(JUri::root().'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 				//Adds a string as script to the end of your document 
-				$script2="var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper'); Stockablecustomfields.setEvents(stockableAreas);";
+				$script2="var currentProductid=$product->virtuemart_product_id; var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper'); Stockablecustomfields.setEvents(stockableAreas);";
 				vmJsApi::addJScript ( 'addStockableEvents', $script2);	
 			}
 		}

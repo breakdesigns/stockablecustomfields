@@ -42,6 +42,7 @@ Class CustomfieldStockablecustomfields{
 	 * Get a custom record from the db
 	 *
 	 * @param 	int $custom_id
+	 * 
 	 * @return	object	The custom record
 	 * @since	1.0
 	 */
@@ -58,6 +59,7 @@ Class CustomfieldStockablecustomfields{
 	 *
 	 * Returns the lang string of the custom type
 	 * @param 	string $key_type
+	 * 
 	 * @return	string
 	 * @since	1.0
 	 */
@@ -137,15 +139,17 @@ Class CustomfieldStockablecustomfields{
 		catch (RuntimeException $e)
 		{
 			JError::raiseWarning(500, $e->getMessage());
+			return false;
 		}
 		return $result;
 	}
 
 	/**
-	 * Gets the custom fields of a product from the database
+	 * Gets the custom fields of product/s from the database
 	 *
-	 * @param 	int 	$product_id
+	 * @param 	mixed 	$product_id	Int or Array of integers
 	 * @param 	int 	$custom_id
+	 * @param	int		$limit
 	 *
 	 * @return	JTable	 A database object
 	 * @since	1.0
@@ -154,12 +158,19 @@ Class CustomfieldStockablecustomfields{
 		if(empty($product_id)&& empty($custom_id))return false;
 		$db=JFactory::getDbo();
 		$q=$db->getQuery(true);
-		$q->select('*')->from('#__virtuemart_product_customfields AS pc');
-		if(!empty($product_id))$q->where('virtuemart_product_id='.(int)$product_id);
+		$q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
+		if(!empty($product_id)){
+			if(is_array($product_id)) $q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
+			else $q->where('virtuemart_product_id='.(int)$product_id);
+		}
 		if(!empty($custom_id))$q->where('pc.virtuemart_custom_id='.(int)$custom_id);
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
-		$q->order('pc.ordering ASC');		
+
+		if(is_array($product_id))$q->order('FIELD(pc.virtuemart_product_id, '.implode(',', $product_id).'),pc.ordering');
+		else $q->order('pc.ordering ASC');
+
 		$db->setQuery($q,$offset=false,$limit);
+
 		try
 		{
 			$result=$db->loadObjectList();
@@ -167,6 +178,7 @@ Class CustomfieldStockablecustomfields{
 		catch (RuntimeException $e)
 		{
 			JError::raiseWarning(500, $e->getMessage());
+			return false;
 		}
 		return $result;
 	}
@@ -177,8 +189,7 @@ Class CustomfieldStockablecustomfields{
 	 * @param 	int $product_id
 	 * @param 	array $customsfields
 	 *
-	 * @todo	It saves the same custom values again and again. Use either the customfield_id or the custom_id-product_id key to track a value and update it
-	 *
+	 *@return	boolean
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
@@ -223,31 +234,33 @@ Class CustomfieldStockablecustomfields{
 	}
 
 	/**
-	 * Gets the custom fields of the a set of products and returns them
+	 * Check and return orderable products (have stock etc based on the VM config)
 	 *
-	 * @param 	int	$parent_product_id
-	 * @param 	int	$custom_ids
+	 * @param 	array $product_ids
 	 *
-	 * @return	JTable	 A database object
+	 * @return	array the product ids
 	 * @since	1.0
 	 */
-	public static function getChildCustomFields($product_ids,$custom_id){
-		if(empty($product_ids) || empty($custom_id))return false;
-		$db=JFactory::getDbo();
-		$q=$db->getQuery(true);
-		$q->select('pcf.virtuemart_customfield_id,pcf.virtuemart_customfield_id AS id, pcf.virtuemart_product_id, pcf.virtuemart_custom_id, pcf.customfield_value AS value')
-		->from('#__virtuemart_product_customfields AS pcf')
-		->where('pcf.virtuemart_product_id IN ('.implode(',', $product_ids).') AND pcf.virtuemart_custom_id='.(int)$custom_id)
-		->order('FIELD(pcf.virtuemart_product_id, '.implode(',', $product_ids).'),pcf.ordering');
-		$db->setQuery($q);
-		try
-		{
-			$result=$db->loadObjectList();
-		}
-		catch (RuntimeException $e)
-		{
-			JError::raiseWarning(500, $e->getMessage());
-		}
+	public static function getOrderableProducts($product_ids){
+		if(!VmConfig::get('use_as_catalog',0)) {
+			if (VmConfig::get('stockhandle','none')=='disableit') {
+				JArrayHelper::toInteger($product_ids);
+				$db=JFactory::getDbo();
+				$q=$db->getQuery(true);
+				$q->select('virtuemart_product_id')->from('#__virtuemart_products')->where('`product_in_stock` - `product_ordered` >0 AND virtuemart_product_id IN('.implode(',', $product_ids).')');
+				$db->setQuery($q);
+
+				try
+				{
+					$result=$db->loadColumn();
+				}
+				catch (RuntimeException $e)
+				{
+					JError::raiseWarning(500, $e->getMessage());
+					$result=false;
+				}
+			}else $result=$product_ids;
+		}else $result=$product_ids;
 		return $result;
 	}
 
@@ -257,6 +270,7 @@ Class CustomfieldStockablecustomfields{
 	 * @param 	array $objects		The array of the obejects to be checked
 	 * @param 	string $filter_key	The key based on which will happen the filtration
 	 *
+	 * @return	array an array with the filtered objects
 	 * @since	1.0
 	 */
 	public static function filterUniqueValues($objects,$filter_key='value'){
@@ -269,36 +283,54 @@ Class CustomfieldStockablecustomfields{
 			}
 			$value_array[$key]=$ob->$filter_key;
 		}
-		//print_r($objects); echo '<br/>'	, '<br/>';
+		//rearanges the indexes
+		if(!empty($objects))$objects=array_values($objects);
+		
 		return $objects;
 	}
 	
 	/**
+	 * Set selected custom fields based on a product
+	 * 
+	 * @return	array
+	 * @since	1.0
+	 */
+	public static function setSelected($customfields, $product){
+		if(empty($customfields)|| empty($product))return $customfields;
+		foreach($customfields as &$cf){
+			$cf->selected=false;
+			if($cf->virtuemart_product_id==$product->virtuemart_product_id){
+				$cf->selected=true;
+			}
+		}
+		return $customfields;
+	}
+
+	/**
 	 * Creates arrays with the customfield combinations that generate a product
-	 * 
+	 *
 	 * @param 	array 	$customfields
-	 * 
-	 * @return	array	
+	 *
+	 * @return	array
 	 * @since	1.0
 	 */
 	public static function getProductCombinations($customfields){
 		$products=array();
 		$products_final=array();
 		$custom_values=array();
-		foreach ($customfields as $cf){ 
+		foreach ($customfields as $cf){
 			/**
 			 * This is a workaround
 			 * Unfortunately the VM native custom fields use the same table for storing the custom_value and the product_id
 			 * That means that in case we have the same value repeated several times (e.g. color:white), this value has different id each time
 			 * Since we can display the value only once in the FE (e.g. color:white) we are using the the 1st found customfield_id for that value
-			 * @todo	Check also the custom id. Maybe it is another custom each time and 2 or more customs use the same values
 			 */
 			if(!isset($custom_values[$cf->virtuemart_custom_id]))$custom_values[$cf->virtuemart_custom_id]=array();
 			if(!in_array($cf->value, $custom_values[$cf->virtuemart_custom_id])){
 				$custom_values[$cf->virtuemart_custom_id][$cf->id]=$cf->value;
-				$id=$cf->id;
+				$id=(string)$cf->id; 
 			}
-			else $id=array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
+			else $id=(string)array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
 			if(!isset($products[$cf->virtuemart_product_id]))$products[$cf->virtuemart_product_id]=array();
 			if(!in_array($cf->id, $products[$cf->virtuemart_product_id]))$products[$cf->virtuemart_product_id][]=$id;
 		}
@@ -306,7 +338,7 @@ Class CustomfieldStockablecustomfields{
 		foreach ($products as $pid=>$p_array){
 			$products_final[]=array('product_id'=>$pid,'customfield_ids'=>$p_array);
 		}
-		
+
 		$return=new stdClass();
 		$return->combinations=$products_final;
 		return $return;
