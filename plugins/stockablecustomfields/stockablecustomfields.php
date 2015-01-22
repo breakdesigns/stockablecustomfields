@@ -490,5 +490,4 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		}
 		return $product_urls;
 	}
-
 }

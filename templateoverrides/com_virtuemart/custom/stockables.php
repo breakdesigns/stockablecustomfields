@@ -3,7 +3,7 @@
  * @version		$Id: simple 2014-12-17 18:16 sakis Terz $
  * @package		stockablecustomfields
  * @author		Sakis Terz
- * @copyright	Copyright (C)2014 breakdesigns.net . All rights reserved.
+ * @copyright	Copyright (C)2015 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -12,13 +12,12 @@ defined("_JEXEC")or die();
 if (JFactory::getApplication()->isSite()) {
 	JSession::checkToken('get') or die(JText::_('JINVALID_TOKEN'));
 }
-if(version_compare(JVERSION,'3','lt')){
-	JHtml::_('behavior.tooltip');
-}else{//joomla 3
-	JHtml::_('bootstrap.tooltip');
-	JHtml::_('behavior.framework', true);
-	JHtml::_('formbehavior.chosen', 'select');
-}
+require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
+
+JHtml::_('bootstrap.tooltip');
+JHtml::_('behavior.framework', true);
+JHtml::_('formbehavior.chosen', 'select');
+
 
 $app = JFactory::getApplication();
 $document=JFactory::getDocument();
@@ -43,6 +42,10 @@ if($function=='jSelectCustom'){
 	$document->addScript( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/js/list.js');
 }
 $incompatible_customs=array('C','D','T','M','G','A','X','Y','R','Z');
+//get the plugins that can be used
+$compatible_plugins=CustomfieldStockablecustomfields::getCompatiblePlugins();
+print_r($compatible_plugins);
+
 $customs = $this->customs->items;
 ?>
 
@@ -92,7 +95,7 @@ $customs = $this->customs->items;
 			foreach ($customs as $key => $custom) {
 				$compatible=true;
 				$icon='';
-				if(in_array($custom->field_type, $incompatible_customs) || ($custom->field_type=='E' && $custom->custom_element!='customfieldsforall')){
+				if(in_array($custom->field_type, $incompatible_customs) || ($custom->field_type=='E' && !in_array($custom->custom_element, $compatible_plugins))){
 					$compatible=false;
 					$icon='icon-not-ok';
 				}

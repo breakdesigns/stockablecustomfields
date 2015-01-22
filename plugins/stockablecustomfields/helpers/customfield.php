@@ -42,7 +42,7 @@ Class CustomfieldStockablecustomfields{
 	 * Get a custom record from the db
 	 *
 	 * @param 	int $custom_id
-	 * 
+	 *
 	 * @return	object	The custom record
 	 * @since	1.0
 	 */
@@ -59,7 +59,7 @@ Class CustomfieldStockablecustomfields{
 	 *
 	 * Returns the lang string of the custom type
 	 * @param 	string $key_type
-	 * 
+	 *
 	 * @return	string
 	 * @since	1.0
 	 */
@@ -81,6 +81,14 @@ Class CustomfieldStockablecustomfields{
 			);
 			if(isset($types[$key_type]))return $types[$key_type];
 			else return $types[$key_type];
+	}
+
+	public static function getCompatiblePlugins(){
+		$compatibles=array();
+		JPluginHelper::importPlugin ('vmcustom');
+		$dispatcher = JDispatcher::getInstance ();
+		$compatibles= $dispatcher->trigger ('onDetectStockables', array());
+		return $compatibles;
 	}
 
 	/**
@@ -285,13 +293,13 @@ Class CustomfieldStockablecustomfields{
 		}
 		//rearanges the indexes
 		if(!empty($objects))$objects=array_values($objects);
-		
+
 		return $objects;
 	}
-	
+
 	/**
 	 * Set selected custom fields based on a product
-	 * 
+	 *
 	 * @return	array
 	 * @since	1.0
 	 */
@@ -328,7 +336,7 @@ Class CustomfieldStockablecustomfields{
 			if(!isset($custom_values[$cf->virtuemart_custom_id]))$custom_values[$cf->virtuemart_custom_id]=array();
 			if(!in_array($cf->value, $custom_values[$cf->virtuemart_custom_id])){
 				$custom_values[$cf->virtuemart_custom_id][$cf->id]=$cf->value;
-				$id=(string)$cf->id; 
+				$id=(string)$cf->id;
 			}
 			else $id=(string)array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
 			if(!isset($products[$cf->virtuemart_product_id]))$products[$cf->virtuemart_product_id]=array();
