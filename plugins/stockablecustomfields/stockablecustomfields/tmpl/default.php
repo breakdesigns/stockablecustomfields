@@ -13,13 +13,13 @@ $selects=array();
 //if($viewData->product->product_parent_id==0)
 $fist_option=array('value'=>0, 'text'=>JText::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_OPTION'));
 
-$selected=0;
 foreach ($options as $key=>$v) {
 	$label=JText::_($v->value);
 	$selects[] = array('value' => $v->id, 'text' =>$label );
 	if($v->selected==true)$selected=$key;
 }
-if($fist_option)$selected=$selected+1;
+if(isset($selected))$selected=$selected+1;
+else $selected=0;
 
 if(!empty($fist_option))array_unshift($selects,$fist_option);
 if(!empty($selects)){?>

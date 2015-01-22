@@ -23,6 +23,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		parent::__construct($subject, $config);
 
 		$varsToPush = array(
+			'parentOrderable'=>array(0,'int'),	
 			'custom_id'=> array('', 'array'),
 			'child_product_id'=>array(0,'int'),				
 		);
@@ -379,6 +380,13 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 */
 	function plgVmOnDisplayProductFEVM3(&$product,&$group){
 		if ($group->custom_element != $this->_name) return '';
+		$group->show_title=false;
+		//display only in product details
+		if(JFactory::getApplication()->input->get('view')!='productdetails'){
+			$group->display='';
+			$product->orderable=false;
+			return false;
+		} 		
 		$html='';
 		//we want this function to run only once. Not for every customfield record of this type
 		static $printed=false;
@@ -398,7 +406,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$layout='default';
 
 		//this is the parent
-		if($product->product_parent_id==0)$product_parent_id=$product->virtuemart_product_id;
+		if($product->product_parent_id==0){
+			$product_parent_id=$product->virtuemart_product_id;
+			if(empty($custom_params['parentOrderable']))$product->orderable=false;
+		}
 		else $product_parent_id=$product->product_parent_id;
 
 		/*
