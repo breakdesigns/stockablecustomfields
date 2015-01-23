@@ -82,7 +82,13 @@ Class CustomfieldStockablecustomfields{
 			if(isset($types[$key_type]))return $types[$key_type];
 			else return $types[$key_type];
 	}
-
+	
+	/**
+	 * Tracks which plugins can be used as stockables
+	 * 
+	 * @return	array
+	 * @since	1.0
+	 */
 	public static function getCompatiblePlugins(){
 		$compatibles=array();
 		JPluginHelper::importPlugin ('vmcustom');
@@ -297,22 +303,6 @@ Class CustomfieldStockablecustomfields{
 		return $objects;
 	}
 
-	/**
-	 * Set selected custom fields based on a product
-	 *
-	 * @return	array
-	 * @since	1.0
-	 */
-	public static function setSelected($customfields, $product){
-		if(empty($customfields)|| empty($product))return $customfields;
-		foreach($customfields as &$cf){
-			$cf->selected=false;
-			if($cf->virtuemart_product_id==$product->virtuemart_product_id){
-				$cf->selected=true;
-			}
-		}
-		return $customfields;
-	}
 
 	/**
 	 * Creates arrays with the customfield combinations that generate a product

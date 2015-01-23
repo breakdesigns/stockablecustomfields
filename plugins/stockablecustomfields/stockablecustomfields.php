@@ -338,7 +338,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$data['categories']=array();
 
 		//call the products model to create a child product
-		$productModel=VmModel::getModel('Product');
+		//$productModel=VmModel::getModel('Product');
+        if(!class_exists('VirtueMartModelProduct'))require VMPATH_ADMIN.DIRECTORY_SEPARATOR."models".DIRECTORY_SEPARATOR."product.php";
+        $productModel=new VirtueMartModelProduct();
 		$productTable = $productModel->getTable ('products');
 		//set a new slug
 		$productTable->checkCreateUnique('#__virtuemart_products_' . VmConfig::$vmlang,'slug');
@@ -392,6 +394,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		static $printed=false;
 		if($printed==true)return;
 		$printed=true;
+        $ischild=false;
 
 		$stockable_customfields=array();
 		$custom_id=$group->virtuemart_custom_id;
@@ -410,7 +413,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			$product_parent_id=$product->virtuemart_product_id;
 			if(empty($custom_params['parentOrderable']))$product->orderable=false;
 		}
-		else $product_parent_id=$product->product_parent_id;
+		else {
+		  $ischild=true;
+          $product_parent_id=$product->product_parent_id;
+		}
 
 		/*
 		 * we need to get the stockable cuctomfields of the parent, to load the child product ids
@@ -445,7 +451,6 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 						//filter to remove duplicates
 						$stockable_customfields_display=CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);						
 					}					
-					$stockable_customfields_display=CustomfieldStockablecustomfields::setSelected($stockable_customfields_display,$product);
 					$viewdata->options=$stockable_customfields_display;
 					//cart input
 					if($group->is_input)$html.= $this->renderByLayout($layout,$viewdata);
@@ -465,8 +470,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$doc->addScriptDeclaration($script);
 				$doc->addScript(JUri::root().'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 				//Adds a string as script to the end of your document 
-				$script2="var currentProductid=$product->virtuemart_product_id; var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper'); Stockablecustomfields.setEvents(stockableAreas);";
-				vmJsApi::addJScript ( 'addStockableEvents', $script2);	
+				$script2="var currentProductid=$product->virtuemart_product_id; var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper');";
+                if($ischild)$script2.="Stockablecustomfields.setEvents(stockableAreas);";
+				vmJsApi::addJScript ( 'addStockableEvents', $script2);
 			}
 		}
 

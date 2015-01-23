@@ -4,8 +4,14 @@
 if (typeof Stockablecustomfields === "undefined") {
 	var Stockablecustomfields = {
 			setEvents : function(stockableAreas) {
+                	var combinations=JSON.parse(stockableCustomFieldsCombinations);
+		            Stockablecustomfields.combinations=combinations.combinations;
+		            Stockablecustomfields.product_urls=JSON.parse(stockableCustomFieldsProductUrl);
+
 				stockableAreas.each(function() {
 					var stockArea = jQuery(this);
+                    Stockablecustomfields.setSelected(stockArea);
+
 					stockArea.find('input').change(function(){
 						Stockablecustomfields.loadProduct(stockArea);
 					});
@@ -14,7 +20,26 @@ if (typeof Stockablecustomfields === "undefined") {
 					});
 					});
 				},
-				update:function(stockArea){	
+                setSelected:function(stockArea){
+                    var currentCombination=false;
+
+                    //find the current combination
+                    jQuery.each(Stockablecustomfields.combinations,function(index1,combination){
+                      if(combination.product_id==currentProductid) currentCombination=combination;
+                    });
+
+                    if(currentCombination){
+                        var customs=stockArea.find( "[name^='customProductData']" );
+                        if(customs.length>0){
+                          jQuery.each(customs,function(index,custom){
+                              jQuery(this).val(currentCombination.customfield_ids[index]);
+                          });
+                           //update by setting incompatible combinations etc
+                          Stockablecustomfields.update(stockArea);
+                        }
+                    }
+                },
+				update:function(stockArea){
 					// get the customfields
 					var customs=stockArea.find( "[name^='customProductData']" );
 					var countCustoms=customs.length;
@@ -24,32 +49,32 @@ if (typeof Stockablecustomfields === "undefined") {
 					
 					customs.each(function(index,custom){
 						var value=jQuery.trim(jQuery(this).val());
-						// do not proceed if any of the customs have no
-						// selection
-						
+
 						if(!value || value=="0"){
 							emptyCustoms[index]=this;
 							//if the 1st is empty enable all and return
 							if(index==0){
 								Stockablecustomfields.enableAll(customs);
-								return;
+								return false;
 							}
-							nomatch=true;							
+							nomatch=true;
 						}
+                        //console.log("index"+index," nomatch:"+nomatch," value:"+value);
 						
 						//if there are combinations, use them to check the following customfields
 						if(currentCombinations.length>0)var curCombinations=currentCombinations;
 						else curCombinations=Stockablecustomfields.combinations;
-						
+
 						//store the combination found in current check
 						var matchedCombinations=new Array();
-						
-						jQuery.each(curCombinations,function(index2, combinationObj){ 						
+
+						jQuery.each(curCombinations,function(index2, combinationObj){
 							// found
-							if(combinationObj.customfield_ids.indexOf(value)>-1){								
-								matchedCombinations.push(combinationObj);								
+							if(combinationObj.customfield_ids[index]==value){
+								matchedCombinations.push(combinationObj);
 							}							
-						});	
+						});
+
 						if(matchedCombinations.length>0)currentCombinations=matchedCombinations;
 						else nomatch=true;
 						
@@ -65,7 +90,7 @@ if (typeof Stockablecustomfields === "undefined") {
 					});					
 				},
 				
-				setNextCompatibles:function(customs,from,current_combinations, hide=false){					
+				setNextCompatibles:function(customs,from,current_combinations){
 					
 					for(var i=from+1; i<customs.length; i++){
 						//first disable them all
@@ -131,9 +156,6 @@ if (typeof Stockablecustomfields === "undefined") {
 	jQuery.noConflict();
 	jQuery(document).ready(function($) {
 		var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper');
-		var combinations=JSON.parse(stockableCustomFieldsCombinations);
-		Stockablecustomfields.combinations=combinations.combinations;
-		Stockablecustomfields.product_urls=JSON.parse(stockableCustomFieldsProductUrl);
-		//Stockablecustomfields.setEvents(stockableAreas);
+		Stockablecustomfields.setEvents(stockableAreas);
 	});
 }

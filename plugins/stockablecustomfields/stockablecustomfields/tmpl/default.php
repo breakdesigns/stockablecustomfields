@@ -16,7 +16,7 @@ $fist_option=array('value'=>0, 'text'=>JText::_('PLG_STOCKABLECUSTOMFIELDS_SELEC
 foreach ($options as $key=>$v) {
 	$label=JText::_($v->value);
 	$selects[] = array('value' => $v->id, 'text' =>$label );
-	if($v->selected==true)$selected=$key;
+	if(!empty($v->selected))$selected=$key;
 }
 if(isset($selected))$selected=$selected+1;
 else $selected=0;
