@@ -83,25 +83,31 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		if(version_compare(VM_VERSION, '2.9','lt'))$this->parseCustomParams ($field);
 		//If the product is not saved do not proceed
 		if(empty($product_id)){
-			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLEASE_SAVE_PRODUCT').'</span></div>';
+			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info"></span><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLEASE_SAVE_PRODUCT').'</span></div>';
 			return;
 		}
 		$product=$this->getProduct($product_id);
 
 		//do not display in child products
 		if($product->product_parent_id>0){
-			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLUGIN_ASSIGNED').'</span></div>';
+			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info"></span><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLUGIN_ASSIGNED').'</span></div>';
 			return;
 		}
 
 		//check if there is a child product derived from this customfield
-		$child_product_id=0;
+		$derived_product_id=0;
 		if(!empty($field->child_product_id)){
-			$child_product=$this->getProduct($field->child_product_id);
+			if($field->child_product_id!=$product_id){
+				$derived_product=$this->getProduct($field->child_product_id);
+				if(!empty($derived_product))$derived_product_id=$derived_product->virtuemart_product_id; 
+			}else {
+				$derived_product=$product_id;
+				$derived_product_id=$product_id;
+			}
 			//it can return an empty product object, even if it does not exist
-			if(empty($child_product->product_parent_id))$child_product=false;
+			//if(empty($derived_product->product_parent_id))$derived_product=false;
 		}
-		if(!empty($child_product))$child_product_id=$child_product->virtuemart_product_id;
+		
 
 		$html='';
 		$parent_custom_id=$field->virtuemart_custom_id;
@@ -116,9 +122,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			foreach ($custom_ids as $custom_id){
 				$subcustomfield=false;
 				$custom=CustomfieldStockablecustomfields::getCustom($custom_id);
-				if(!empty($child_product)){
+				if(!empty($derived_product)){
 					//get the other fields
-					$subcustomfields=CustomfieldStockablecustomfields::getCustomfields($child_product_id,$custom_id);
+					$subcustomfields=CustomfieldStockablecustomfields::getCustomfields($derived_product_id,$custom_id);
 					$subcustomfield=reset($subcustomfields);
 				}
 
@@ -134,42 +140,59 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			$html.='</table>';
 
 			$html.='<input type="hidden" value="'.$row.'" name="'.$this->_product_paramName.'['.$row.'][row]"/>';
-			$html.='<input type="hidden" value="'.$child_product_id.'" name="'.$this->_product_paramName.'['.$row.'][child_product_id]" />';
+			$html.='<input type="hidden" value="'.$derived_product_id.'" name="'.$this->_product_paramName.'['.$row.'][child_product_id]" />';
 
 			//print the child product
-			if(!empty($child_product)){
+			if(!empty($derived_product)){
+				
+				//if the parent product is orderable, it can be variant as well
+				if($field->child_product_id==$product_id){
+					$parent_derived=true;
+					$html.='<div style="clear:both;" class="alert alert-info"><span class="icon-info"></span><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_USE_PARENT').'</span></div>';
+					$html.='<script>parent_derived=true;</script>';
+				}else{
 				//set price display
-				$this->setPriceDisplay($child_product);
-
+				$this->setPriceDisplay($derived_product);				
 				$html.='
-				<table class="table table-bordered"  style="width:100%; min-width:450px;">
-				<caption>'.JText::_('COM_VIRTUEMART_CUSTOM_PRODUCT_CHILD').'</caption>
-				<thead>
-				<tr>
-				<th width="60%">'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_NAME').'</th>
-				<th width="15%">'.JText::_('COM_VIRTUEMART_SKU').'</th>					
-				<th width="20%">'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_COST').'</th>
-				<th style="min-width:50px;"></th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr>
-				<td>'.$child_product->product_name.'</td>
-				<td>'.$child_product->product_sku.'</td>
-				<td>'.$child_product->product_price_display.'</td>
-				<td>
-				<a class="btn" target="_blank" href="'.JRoute::_('index.php?option=com_virtuemart&view=product&task=edit&virtuemart_product_id='.$child_product->virtuemart_product_id).'">'.
-				JText::_('JACTION_EDIT').
-				'</td>
-				</tr>
-				</tbody>
-				</table>';				
+					<table class="table table-bordered" style="width:100%; min-width:450px;">
+					<caption><h4>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_DERIVED_PRODUCT').'</h4></caption>
+					<thead>
+					<tr>
+					<th width="60%">'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_NAME').'</th>
+					<th width="15%">'.JText::_('COM_VIRTUEMART_SKU').'</th>					
+					<th width="20%">'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_PRICE_COST').'</th>
+					<th style="min-width:50px;"></th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+					<td>'.$derived_product->product_name.'</td>
+					<td>'.$derived_product->product_sku.'</td>
+					<td>'.$derived_product->product_price_display.'</td>
+					<td>
+					<a class="btn" target="_blank" href="'.JRoute::_('index.php?option=com_virtuemart&view=product&task=edit&virtuemart_product_id='.$derived_product->virtuemart_product_id).'">'.
+					JText::_('JACTION_EDIT').
+					'</td>
+					</tr>
+					</tbody>
+					</table>';
+				}			
 			}
 			//no child product. Print a form
 			else{
+				//if the parent product is orderable, it can be a variant as well
+				if($custom_params['parentOrderable']){
+					$html.='
+					<div class="controls" id="parent_derived_wrapper'.$row.'">
+					<input type="checkbox" id="use_parent_'.$row.'" onclick="if(jQuery(this).attr(\'checked\')==\'checked\' && (typeof parent_derived==\'undefined\' || parent_derived==false)){jQuery(\'#derived_product_'.$row.'\').hide(); parent_derived=true;} else{jQuery(\'#derived_product_'.$row.'\').show(); parent_derived=false;}" name="'.$this->_product_paramName.'['.$row.'][parent_product_as_derived]" value="1"/>
+					<label for="use_parent_'.$row.'">'.JText::_('PLG_STOCKABLECUSTOMFIELDS_USE_PARENT').'</label>
+					</div>';
+					$html.='<script>if(typeof parent_derived!="undefined" && parent_derived==true)jQuery("#parent_derived_wrapper'.$row.'").hide();</script>';
+					
+				}
 				$html.='
-				<table class="table table-bordered" style="width:100%; min-width:450px;">
-				<caption>'.JText::_('COM_VIRTUEMART_CUSTOM_PRODUCT_CHILD').'</caption>
+				<table class="table table-bordered" id="derived_product_'.$row.'" style="width:100%; min-width:450px;">
+				<caption><h4>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_DERIVED_PRODUCT').'</h4></caption>
 				<thead>
 				<tr>
 				<th width="60%">'.JText::_('COM_VIRTUEMART_PRODUCT_FORM_NAME').'</th>
@@ -251,30 +274,31 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$index=array_search($row, array_keys($data['field']));
 
 				if($virtuemart_customfield_ids[$index]->virtuemart_custom_id==$custom_id){
-
 					$virtuemart_customfield_id=$virtuemart_customfield_ids[$index]->virtuemart_customfield_id;
 				}
 			}
 
 
-			$child_product_id=$plugin_param['child_product_id'];
-			if(empty($child_product_id)){
-				$child_product_id=$this->createChildProduct($data,$plugin_param);
-				vmdebug('Stocakbles - $child_product_id:',$child_product_id);
+			$derived_product_id=$plugin_param['child_product_id'];
+			if(empty($derived_product_id)){ vmdebug('$plugin_param',$plugin_param);
+				//if we use the parent product as derived, no need to create child products
+				if($plugin_param['parent_product_as_derived'])$derived_product_id=$product_id;
+				else $derived_product_id=$this->createChildProduct($data,$plugin_param);
+				vmdebug('Stocakbles - $derived_product_id:',$derived_product_id);
 				//could not create child
-				if(empty($child_product_id)){
+				if(empty($derived_product_id)){
 					return false;
 				}
 
 				//update the params in the customfield
-				$upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$child_product_id.'"|');
+				$upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$derived_product_id.'"|');
 				vmdebug('Stockables - Master Product\'s custom field\'s '.$virtuemart_customfield_id.'  params update status:',$upated);
 			}
 
 			//we have child product. Let's give it custom fields or update the existings
-			if(!empty($child_product_id)){
+			if(!empty($derived_product_id)){
 				//store the custom fields to the child product
-				$result=CustomfieldStockablecustomfields::storeCustomFields($child_product_id,$plugin_param['stockablecustomfields']);
+				$result=CustomfieldStockablecustomfields::storeCustomFields($derived_product_id,$plugin_param['stockablecustomfields']);
 			}
 		}
 		return $result;
@@ -419,33 +443,35 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		}
 
 		/*
-		 * we need to get the stockable cuctomfields of the parent, to load the child product ids
-		 * We use them to load their custom fields and for the correct order of display of the custom fields
+		 * we need to get the stockable cuctomfields of the parent, to load the child product ids from the params of the custom fields
+		 * We use them to load their custom fields and the order of display of the custom fields
 		 */
 		$parent_customfields=CustomfieldStockablecustomfields::getCustomfields($product_parent_id,$custom_id);
-		$child_product_ids=array();
+		$derived_product_ids=array();
 		foreach ($parent_customfields as $pc){
 			$customfield_params=explode('|', $pc->customfield_params);
 			foreach ($customfield_params as $cparam){
 				$item=explode('=', $cparam);
-				if($item[0]=='child_product_id')$child_product_ids[]=json_decode($item[1]);
+				if($item[0]=='child_product_id')$derived_product_ids[]=json_decode($item[1]);
 			}
 		}
 		$viewdata=$group;
 		$viewdata->product=$product;
+		$viewdata->isderived=false;
 
-		if(!empty($custom_ids) && !empty($child_product_ids)){
-			$child_product_ids=CustomfieldStockablecustomfields::getOrderableProducts($child_product_ids);
-			//wraps all the html generated
-			$html.='<div class="stockablecustomfields_fields_wrapper">';
+		if(!empty($custom_ids) && !empty($derived_product_ids)){
+			$derived_product_ids=CustomfieldStockablecustomfields::getOrderableProducts($derived_product_ids);
+			if(in_array($product->virtuemart_product_id, $derived_product_ids))$viewdata->isderived=true;
 			
+			//wraps all the html generated
+			$html.='<div class="stockablecustomfields_fields_wrapper">';			
 			foreach ($custom_ids as $cust_id){
 				$custom=CustomfieldStockablecustomfields::getCustom($cust_id);
 				$viewdata->custom=$custom;
 
 				if($custom->field_type!='E'){
 					//get it from the built in function
-					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getCustomfields($child_product_ids,$cust_id);
+					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getCustomfields($derived_product_ids,$cust_id);
 					$stockable_customfields_display=array();
 					if(!empty($stockable_customfields_tmp)){
 						//filter to remove duplicates
@@ -465,13 +491,14 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$doc=JFactory::getDocument();
 				//generate the array based on which, it will load the chilc products getting into account the selected fields
 				$script='var stockableCustomFieldsCombinations=\''.json_encode($customfield_product_combinations).'\';';
-				$childproduct_urls=$this->getProductUrls($child_product_ids,$product->virtuemart_category_id);
+				$childproduct_urls=$this->getProductUrls($derived_product_ids,$product->virtuemart_category_id);
 				$script.='var stockableCustomFieldsProductUrl=\''.json_encode($childproduct_urls).'\';';
 				$doc->addScriptDeclaration($script);
 				$doc->addScript(JUri::root().'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 				//Adds a string as script to the end of your document 
 				$script2="var currentProductid=$product->virtuemart_product_id; var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper');";
-                if($ischild)$script2.="Stockablecustomfields.setEvents(stockableAreas);";
+                //indicates ajax request
+                if(JFactory::getApplication()->input->get('tmpl')=='component')$script2.="Stockablecustomfields.setEvents(stockableAreas);";
 				vmJsApi::addJScript ( 'addStockableEvents', $script2);
 			}
 		}

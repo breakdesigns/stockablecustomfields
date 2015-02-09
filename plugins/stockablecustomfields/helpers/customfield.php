@@ -82,10 +82,10 @@ Class CustomfieldStockablecustomfields{
 			if(isset($types[$key_type]))return $types[$key_type];
 			else return $types[$key_type];
 	}
-	
+
 	/**
 	 * Tracks which plugins can be used as stockables
-	 * 
+	 *
 	 * @return	array
 	 * @since	1.0
 	 */
@@ -257,23 +257,39 @@ Class CustomfieldStockablecustomfields{
 	 */
 	public static function getOrderableProducts($product_ids){
 		if(!VmConfig::get('use_as_catalog',0)) {
-			if (VmConfig::get('stockhandle','none')=='disableit') {
-				JArrayHelper::toInteger($product_ids);
-				$db=JFactory::getDbo();
-				$q=$db->getQuery(true);
-				$q->select('virtuemart_product_id')->from('#__virtuemart_products')->where('`product_in_stock` - `product_ordered` >0 AND virtuemart_product_id IN('.implode(',', $product_ids).')');
-				$db->setQuery($q);
+			JArrayHelper::toInteger($product_ids);
+			$db=JFactory::getDbo();
+			$q=$db->getQuery(true);
+			$q->select('p.virtuemart_product_id')->from('#__virtuemart_products AS p');
+			$q->where('p.published=1');
+			
+			//stock management
+			if (VmConfig::get('stockhandle','none')=='disableit' || VmConfig::get('stockhandle','none')=='disableit_children') {
+				$q->where('p.`product_in_stock` - p.`product_ordered` >0 AND p.virtuemart_product_id IN('.implode(',', $product_ids).')');
+			}
+			
+			//shopper groups
+			$q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');			
+			$usermodel = VmModel::getModel ('user');
+			$currentVMuser = $usermodel->getCurrentUser ();
+			$virtuemart_shoppergroup_ids = (array)$currentVMuser->shopper_groups; 
+			JArrayHelper::toInteger($virtuemart_shoppergroup_ids);
+			if (is_array ($virtuemart_shoppergroup_ids) && !empty($virtuemart_shoppergroup_ids)) {
+				$q->where('ps.`virtuemart_shoppergroup_id` IS NULL OR ps.`virtuemart_shoppergroup_id` IN('.implode(',', $virtuemart_shoppergroup_ids).')');
+			}
+			else $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
+			
+			$db->setQuery($q);
 
-				try
-				{
-					$result=$db->loadColumn();
-				}
-				catch (RuntimeException $e)
-				{
-					JError::raiseWarning(500, $e->getMessage());
-					$result=false;
-				}
-			}else $result=$product_ids;
+			try
+			{
+				$result=$db->loadColumn();
+			}
+			catch (RuntimeException $e)
+			{
+				JError::raiseWarning(500, $e->getMessage());
+				$result=false;
+			}
 		}else $result=$product_ids;
 		return $result;
 	}

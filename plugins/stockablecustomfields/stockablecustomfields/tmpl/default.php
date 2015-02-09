@@ -10,7 +10,7 @@ $wrapper_id='stockablecustomfields_field_wrapper_'.$viewData->virtuemart_customf
 $fist_option=array();
 $selects=array();
 //empty options should exist only on the parent product loading
-//if($viewData->product->product_parent_id==0)
+if($viewData->product->product_parent_id==0 && !$viewData->isderived)
 $fist_option=array('value'=>0, 'text'=>JText::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_OPTION'));
 
 foreach ($options as $key=>$v) {
@@ -24,7 +24,7 @@ else $selected=0;
 if(!empty($fist_option))array_unshift($selects,$fist_option);
 if(!empty($selects)){?>
 <label for="<?php echo $select_id?>"><?php echo JText::_($viewData->custom->custom_title)?></label>
-<div class="controls">
+<div>
 	<?php 
 	echo JHTML::_('select.genericlist', $selects,$field_name,'','value','text',$selects[$selected],$id=$select_id,true);?>
 </div>
