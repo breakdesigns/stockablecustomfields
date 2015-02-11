@@ -265,9 +265,9 @@ Class CustomfieldStockablecustomfields{
 			
 			//stock management
 			if (VmConfig::get('stockhandle','none')=='disableit' || VmConfig::get('stockhandle','none')=='disableit_children') {
-				$q->where('p.`product_in_stock` - p.`product_ordered` >0 AND p.virtuemart_product_id IN('.implode(',', $product_ids).')');
+				$q->where('p.`product_in_stock` - p.`product_ordered` >0');
 			}
-			
+            $q->where('p.virtuemart_product_id IN('.implode(',', $product_ids).')');
 			//shopper groups
 			$q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');			
 			$usermodel = VmModel::getModel ('user');

@@ -2,14 +2,14 @@
 <extension version="2.5" type="plugin" group="vmcustom"
 	method="upgrade">
 	<name>Stockable Customfields</name>
-	<creationDate>2015-02-09</creationDate>
+	<creationDate>2015-02-11</creationDate>
 	<author>breadkesigns</author>
 	<authorEmail>info@breakdesigns.net</authorEmail>
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
 	<copyright>Copyright(c) 2015 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
-	<version>1.0-beta.2</version>
-	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.0-beta.2 | 09 February 2015)</i></h3>
+	<version>1.0-beta.3</version>
+	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.0-beta.3 | 11 February 2015)</i></h3>
     <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_150.png"/></span>
     <p style="margin-top:5px; font-size:12px; font-weight:0;">Create stockable variations using custom fields</p>
     <p><a href="http://breakdesigns.net/stockable-customfields-manual" target="_blank">Please check our Manual to see how to proceed further</a>
