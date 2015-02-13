@@ -118,7 +118,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 
 		if(!empty($custom_ids) && is_array($custom_ids)){
 			$html.='<table class="table">';
-
+			$i=0;
 			foreach ($custom_ids as $custom_id){
 				$subcustomfield=false;
 				$custom=CustomfieldStockablecustomfields::getCustom($custom_id);
@@ -126,16 +126,32 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 					//get the other fields
 					$subcustomfields=CustomfieldStockablecustomfields::getCustomfields($derived_product_id,$custom_id);
 					$subcustomfield=reset($subcustomfields);
+				}else {
+					$subcustomfield=$custom;
+					$subcustomfield->virtuemart_customfield_id=0;
 				}
-
+				$html.='<tr>';
+				$html.='<td><label for="'.$row.'_'.$custom_id.'" class="">'.JText::_($custom->custom_title).'</label></td>';
+				
+				//native types
 				if($custom->field_type!='E'){
 					$value='';
-					!empty($subcustomfield->customfield_value)?$value=$subcustomfield->customfield_value:$value='';
-					$html.='<tr>';
-					$html.='<td><label for="'.$row.'_'.$custom_id.'" class="">'.JText::_($custom->custom_title).'</label></td>';
+					!empty($subcustomfield->customfield_value)?$value=$subcustomfield->customfield_value:$value='';					
 					$html.='<td><input type="text" value="'.$value.'" name="'.$this->_product_paramName.'['.$row.']['.$this->_name.']['.$custom_id.'][value]" id="'.$row.'_'.$custom_id.'"/></td>';
-					$html.='</tr>';
+					
 				}
+				//plugins
+				else {					
+					$input_pefix='['.$this->_name.']['.$custom_id.']';
+					$inner_row=$row;
+					$retValue='';
+					JPluginHelper::importPlugin ('vmcustom');
+					$dispatcher = JDispatcher::getInstance ();
+					$compatibles= $dispatcher->trigger ('plgVmOnStockableDisplayBE', array($subcustomfield,$derived_product_id,&$inner_row,&$retValue,$input_pefix));
+					if(!empty($retValue))$html.='<td>'.$retValue.'</td>';					
+				}
+				$html.='</tr>';
+				$i++;
 			}
 			$html.='</table>';
 
@@ -262,6 +278,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			if($product->product_parent_id>0)return false;
 
 			$virtuemart_customfield_id=$data['field'][$row]['virtuemart_customfield_id'];
+			
 			//new record without customfield id
 			if(empty($virtuemart_customfield_id)){
 				/*
@@ -280,7 +297,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 
 
 			$derived_product_id=$plugin_param['child_product_id'];
-			if(empty($derived_product_id)){ vmdebug('$plugin_param',$plugin_param);
+			if(empty($derived_product_id)){ 
 				//if we use the parent product as derived, no need to create child products
 				if($plugin_param['parent_product_as_derived'])$derived_product_id=$product_id;
 				else $derived_product_id=$this->createChildProduct($data,$plugin_param);
@@ -290,13 +307,13 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 					return false;
 				}
 
-				//update the params in the customfield
+				//update the customfield params of the master product. Set the child id as param
 				$upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$derived_product_id.'"|');
 				vmdebug('Stockables - Master Product\'s custom field\'s '.$virtuemart_customfield_id.'  params update status:',$upated);
 			}
 
 			//we have child product. Let's give it custom fields or update the existings
-			if(!empty($derived_product_id)){
+			if(!empty($derived_product_id)){				
 				//store the custom fields to the child product
 				$result=CustomfieldStockablecustomfields::storeCustomFields($derived_product_id,$plugin_param['stockablecustomfields']);
 			}
@@ -315,7 +332,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	function isValidInput($input){
 		foreach ($input as $custom_id=>$inp){
 			$value= JString::trim($inp['value']);
-			if(empty($value))return false;
+			if(isset($inp['value']) && empty($value))return false;
 		}
 		return true;
 	}
