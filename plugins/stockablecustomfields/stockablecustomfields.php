@@ -475,15 +475,16 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$viewdata=$group;
 		$viewdata->product=$product;
 		$viewdata->isderived=false;
+		if(!empty($derived_product_ids))$derived_product_ids=CustomfieldStockablecustomfields::getOrderableProducts($derived_product_ids);
 
-		if(!empty($custom_ids) && !empty($derived_product_ids)){
-			$derived_product_ids=CustomfieldStockablecustomfields::getOrderableProducts($derived_product_ids);
+		if(!empty($custom_ids) && !empty($derived_product_ids)){			
 			if(in_array($product->virtuemart_product_id, $derived_product_ids))$viewdata->isderived=true;
 			
 			//wraps all the html generated
 			$html.='<div class="stockablecustomfields_fields_wrapper">';			
 			foreach ($custom_ids as $cust_id){
 				$custom=CustomfieldStockablecustomfields::getCustom($cust_id);
+				$viewdata->virtuemart_custom_id=$custom->virtuemart_custom_id;
 				$viewdata->custom=$custom;
 
 				if($custom->field_type!='E'){
@@ -496,7 +497,26 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 					}					
 					$viewdata->options=$stockable_customfields_display;
 					//cart input
-					if($group->is_input)$html.= $this->renderByLayout($layout,$viewdata);
+					if(!empty($viewdata->options) && $group->is_input){
+						$html.='<label>'.JText::_($custom->custom_title).'</label>';
+						$html.= $this->renderByLayout($layout,$viewdata);
+					}
+				}
+				//call plugin for the output
+				else{
+					//the customfields
+					$customfields=array();
+					//the html output
+					$output='';
+					JPluginHelper::importPlugin ('vmcustom');
+					$dispatcher = JDispatcher::getInstance ();
+					$result= $dispatcher->trigger ('plgVmOnStockableDisplayFE', array($product,$custom,$derived_product_ids,&$customfields, &$output));
+					$stockable_customfields_tmp=$customfields;
+					if($output && $group->is_input){
+						$html.='<label>'.JText::_($custom->custom_title).'</label>';
+						$html.=$output;
+					}
+					
 				}
 				if(!empty($stockable_customfields_tmp))$stockable_customfields=array_merge($stockable_customfields,$stockable_customfields_tmp);
 			}

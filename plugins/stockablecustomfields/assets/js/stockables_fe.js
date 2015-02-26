@@ -13,7 +13,7 @@ if (typeof Stockablecustomfields === "undefined") {
                     Stockablecustomfields.setSelected(stockArea);
 
 					stockArea.find('input').change(function(){
-						Stockablecustomfields.loadProduct(stockArea);
+						Stockablecustomfields.update(stockArea);
 					});
 					stockArea.find('select').change(function(){
 						Stockablecustomfields.update(stockArea);
@@ -42,24 +42,24 @@ if (typeof Stockablecustomfields === "undefined") {
 				update:function(stockArea){
 					// get the customfields
 					var customs=stockArea.find( "[name^='customProductData']" );
+					customs=Stockablecustomfields.getActive(customs); //console.log(customs);
 					var countCustoms=customs.length;
 					var emptyCustoms=new Array();
 					var currentCombinations=new Array();
-					var nomatch=false;
-					
-					customs.each(function(index,custom){
+					var nomatch=false;					
+					num_index=0;
+					jQuery.each(customs,function(index,custom){
 						var value=jQuery.trim(jQuery(this).val());
-
+						
 						if(!value || value=="0"){
-							emptyCustoms[index]=this;
+							emptyCustoms[num_index]=this;
 							//if the 1st is empty enable all and return
-							if(index==0){
+							if(num_index==0){
 								Stockablecustomfields.enableAll(customs);
 								return false;
 							}
 							nomatch=true;
-						}
-                        //console.log("index"+index," nomatch:"+nomatch," value:"+value);
+						}                        
 						
 						//if there are combinations, use them to check the following customfields
 						if(currentCombinations.length>0)var curCombinations=currentCombinations;
@@ -70,7 +70,7 @@ if (typeof Stockablecustomfields === "undefined") {
 
 						jQuery.each(curCombinations,function(index2, combinationObj){
 							// found
-							if(combinationObj.customfield_ids[index]==value){
+							if(combinationObj.customfield_ids[num_index]==value){
 								matchedCombinations.push(combinationObj);
 							}							
 						});
@@ -78,27 +78,45 @@ if (typeof Stockablecustomfields === "undefined") {
 						if(matchedCombinations.length>0)currentCombinations=matchedCombinations;
 						else nomatch=true;
 						
+						console.log("index"+num_index," nomatch:"+nomatch," value:"+value);
+						
 						//show only releveant combinations or load the product
 						if(matchedCombinations.length>0){
-							//Do not set compatibles for the last custom
-							if(index<countCustoms-1)Stockablecustomfields.setNextCompatibles(customs,index,matchedCombinations);
+							//Do not set next compatibles after the last custom
+							if(num_index<countCustoms-1)Stockablecustomfields.setNextCompatibles(customs,num_index,matchedCombinations);
 							//if last maybe we should load the product
 							else{								
 								if(nomatch==false && matchedCombinations.length>0)Stockablecustomfields.loadProductPage(matchedCombinations);
 							}
 						}
+						num_index++;
 					});					
+				},
+				getActive:function(customs){
+					var new_array={};
+					customs.each(function(index,custom){
+						var name=jQuery(this).attr('name');
+						//remove the brackets in case of array variable
+						name=name.replace(/[\[\]]/g,'');
+						
+						if(jQuery(this).is('select'))new_array[name]=custom;
+						else if(jQuery(this).is('input')){													
+							if(typeof new_array[name]=='undefined')new_array[name]=custom;
+							else if(jQuery(this).attr('checked'))new_array[name]=custom;							
+						}
+					});
+					return new_array;
 				},
 				
 				setNextCompatibles:function(customs,from,current_combinations){
-					
-					for(var i=from+1; i<customs.length; i++){
+					alert('haha');
+					for(var i=from+1; i<customs.length; i++){console.log(jQuery(customs[i]).attr('name'));
 						//first disable them all
 						if(jQuery(customs[i]).is('input')){
 							jQuery(customs[i]).attr('disabled','disabled');
 							var type='input';
 						}
-						if(jQuery(customs[i]).is('select')){
+						if(jQuery(customs[i]).is('select')){ 
 							jQuery(customs[i]).find('option').attr('disabled','disabled');
 							var type='select';
 						}
