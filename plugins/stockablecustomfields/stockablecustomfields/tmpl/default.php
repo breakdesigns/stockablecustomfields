@@ -23,7 +23,6 @@ else $selected=0;
 
 if(!empty($fist_option))array_unshift($selects,$fist_option);
 if(!empty($selects)){?>
-<label for="<?php echo $select_id?>"><?php echo JText::_($viewData->custom->custom_title)?></label>
 <div>
 	<?php 
 	echo JHTML::_('select.genericlist', $selects,$field_name,'','value','text',$selects[$selected],$id=$select_id,true);?>
