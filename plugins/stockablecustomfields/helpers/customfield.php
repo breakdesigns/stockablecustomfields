@@ -175,7 +175,10 @@ Class CustomfieldStockablecustomfields{
 		$q=$db->getQuery(true);
 		$q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
 		if(!empty($product_id)){
-			if(is_array($product_id)) $q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
+			if(is_array($product_id)) {		
+				JArrayHelper::toInteger($product_id);
+				$q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
+			}
 			else $q->where('virtuemart_product_id='.(int)$product_id);
 		}
 		if(!empty($custom_id))$q->where('pc.virtuemart_custom_id='.(int)$custom_id);
