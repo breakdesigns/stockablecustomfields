@@ -9,15 +9,15 @@ if (typeof Stockablecustomfields === "undefined") {
 		            Stockablecustomfields.product_urls=JSON.parse(stockableCustomFieldsProductUrl);
 
 				stockableAreas.each(function() {
-					var stockArea = jQuery(this);
-                    Stockablecustomfields.setSelected(stockArea);
-
-					stockArea.find('input').change(function(){
-						Stockablecustomfields.loadProduct(stockArea);
-					});
-					stockArea.find('select').change(function(){
-						Stockablecustomfields.update(stockArea);
-					});
+						var stockArea = jQuery(this);
+	                    Stockablecustomfields.setSelected(stockArea);
+	
+						stockArea.find('input').change(function(){
+							Stockablecustomfields.update(stockArea);
+						});
+						stockArea.find('select').change(function(){
+							Stockablecustomfields.update(stockArea);
+						});
 					});
 				},
                 setSelected:function(stockArea){
@@ -30,10 +30,9 @@ if (typeof Stockablecustomfields === "undefined") {
 
                     if(currentCombination){
                         var customs=stockArea.find( "[name^='customProductData']" );
+                        customs=Stockablecustomfields.getActive(customs);
                         if(customs.length>0){
-                          jQuery.each(customs,function(index,custom){
-                              jQuery(this).val(currentCombination.customfield_ids[index]);
-                          });
+                        	Stockablecustomfields.setSelectedFields(customs,currentCombination);
                            //update by setting incompatible combinations etc
                           Stockablecustomfields.update(stockArea);
                         }
@@ -42,24 +41,24 @@ if (typeof Stockablecustomfields === "undefined") {
 				update:function(stockArea){
 					// get the customfields
 					var customs=stockArea.find( "[name^='customProductData']" );
-					var countCustoms=customs.length;
+					customs=Stockablecustomfields.getActive(customs); //console.log(customs);
+					var countCustoms=customs.length; 
 					var emptyCustoms=new Array();
 					var currentCombinations=new Array();
-					var nomatch=false;
-					
-					customs.each(function(index,custom){
+					var nomatch=false;					
+					num_index=0;
+					jQuery.each(customs,function(index,custom){
 						var value=jQuery.trim(jQuery(this).val());
-
+						
 						if(!value || value=="0"){
-							emptyCustoms[index]=this;
+							emptyCustoms[num_index]=this;
 							//if the 1st is empty enable all and return
-							if(index==0){
+							if(num_index==0){
 								Stockablecustomfields.enableAll(customs);
 								return false;
 							}
 							nomatch=true;
-						}
-                        //console.log("index"+index," nomatch:"+nomatch," value:"+value);
+						}                        
 						
 						//if there are combinations, use them to check the following customfields
 						if(currentCombinations.length>0)var curCombinations=currentCombinations;
@@ -70,7 +69,7 @@ if (typeof Stockablecustomfields === "undefined") {
 
 						jQuery.each(curCombinations,function(index2, combinationObj){
 							// found
-							if(combinationObj.customfield_ids[index]==value){
+							if(combinationObj.customfield_ids[num_index]==value){
 								matchedCombinations.push(combinationObj);
 							}							
 						});
@@ -78,35 +77,68 @@ if (typeof Stockablecustomfields === "undefined") {
 						if(matchedCombinations.length>0)currentCombinations=matchedCombinations;
 						else nomatch=true;
 						
+						//console.log("index"+num_index," nomatch:"+nomatch," value:"+value);
+						
 						//show only releveant combinations or load the product
 						if(matchedCombinations.length>0){
-							//Do not set compatibles for the last custom
-							if(index<countCustoms-1)Stockablecustomfields.setNextCompatibles(customs,index,matchedCombinations);
+							//Do not set next compatibles after the last custom
+							if(num_index<countCustoms-1)Stockablecustomfields.setNextCompatibles(customs,num_index,matchedCombinations);
 							//if last maybe we should load the product
 							else{								
 								if(nomatch==false && matchedCombinations.length>0)Stockablecustomfields.loadProductPage(matchedCombinations);
 							}
 						}
+						num_index++;
 					});					
 				},
+				getActive:function(customs){
+					var obj={};
+					var array=[];
+					//create an obj with prop the names of the inputs/selects. 1 name -> 1 var
+					customs.each(function(index,custom){
+						var name=jQuery(this).attr('name');
+						//remove the brackets in case of array variable
+						name=name.replace(/[\[\]]/g,'');
+						
+						if(jQuery(this).is('select'))obj[name]=custom;
+						else if(jQuery(this).is('input')){													
+							if(typeof obj[name]=='undefined')obj[name]=custom;
+							else if(jQuery(this).attr('checked'))obj[name]=custom;							
+						}
+					});
+					//convert to array
+					jQuery.each(obj,function(index,ob){
+						array.push(ob);
+					});
+					return array;
+				},
 				
-				setNextCompatibles:function(customs,from,current_combinations){
-					
+				setNextCompatibles:function(customs,from,current_combinations){ 
 					for(var i=from+1; i<customs.length; i++){
 						//first disable them all
 						if(jQuery(customs[i]).is('input')){
-							jQuery(customs[i]).attr('disabled','disabled');
+							var input_name=jQuery(customs[i]).attr('name');
+							var inputs=jQuery('input[name="'+input_name+'"]');
+							inputs.attr('disabled','disabled');
 							var type='input';
 						}
-						if(jQuery(customs[i]).is('select')){
+						if(jQuery(customs[i]).is('select')){ 
 							jQuery(customs[i]).find('option').attr('disabled','disabled');
 							var type='select';
 						}
 						
 						//check the custom field against the valid combinations and enable the correct combinations
 						jQuery.each(current_combinations,function(index, combination){
-							if(type=='input'){
-								if(combination.customfield_ids[i]==jQuery(customs[i]).val())jQuery(customs[i]).removeAttr('disabled');
+							if(type=='input'){	
+								//in case of inputs we have to iterate all until we find the 1 with the same value
+								jQuery.each(inputs,function(x,input){
+									//console.log('combination 0:'+combination.customfield_ids[i-1],' combination 1:'+combination.customfield_ids[i]," val:"+jQuery(input).val());
+									if(combination.customfield_ids[i]==jQuery(input).val()){										
+										jQuery(input).removeAttr('disabled');
+										return false;
+									}
+								});
+								
 							}
 							else if(type=='select'){
 								var options=jQuery(customs[i]).find('option');
@@ -130,6 +162,38 @@ if (typeof Stockablecustomfields === "undefined") {
 						}
 						
 					}
+				},
+				
+				setSelectedFields:function(customs,currentCombination){
+					var customslength=customs.length;
+					jQuery.each(customs,function(index,custom){
+   
+    						//set selected for the inputs
+    						if(jQuery(custom).is('input')){
+    							var input_name=jQuery(custom).attr('name');
+    							var options=jQuery('input[name="'+input_name+'"]');
+    							var type='input';    							
+    						}
+    						//set selected for the selects
+    						if(jQuery(custom).is('select')){ 
+    							var options=jQuery(custom).find('option');
+    							var type='select';
+    						}
+    						
+							jQuery.each(options,function(x,option){ 
+								if(currentCombination.customfield_ids[index]==jQuery(option).val()){
+									if(type=='input'){										
+										jQuery(option).attr('checked',true);										
+									}									
+									else if(type=='select'){
+										jQuery(option).attr('selected','selected');
+										var value=jQuery(option).val();
+										jQuery(custom).val(value);
+									}
+									if(customslength-1==index)return false;
+								}
+							});
+                    });
 				},
 				enableAll:function(customs){
 					customs.each(function(){
