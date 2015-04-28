@@ -1,13 +1,12 @@
 <?php
-
-if (!defined('_JEXEC')) die;
-
 /**
  * @version		$Id: stockablecustomfields.php 2014-12-15 20:10 sakis Terz $2
  * @package		stockablecustomfield
  * @copyright	Copyright (C) 2014-2015 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
+
+if (!defined('_JEXEC')) die;
 
 if(!class_exists('vmCustomPlugin')) require(JPATH_VM_PLUGINS.DIRECTORY_SEPARATOR.'vmcustomplugin.php');
 require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
@@ -19,7 +18,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @param unknown_type $subject
 	 * @param array $config
 	 */
-	function __construct(& $subject, $config) {
+	function __construct(& $subject, $config) 
+	{
 		parent::__construct($subject, $config);
 
 		$varsToPush = array(
@@ -28,16 +28,14 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			'child_product_id'=>array(0,'int'),				
 		);
 
-
-		if(!defined('VM_VERSION'))define('VM_VERSION', '2.0');
-		if(version_compare(VM_VERSION, '2.9','lt')){
+		if (!defined('VM_VERSION')) define('VM_VERSION', '2.0');
+		if (version_compare(VM_VERSION, '2.9','lt')) {
 			$this->setConfigParameterable ('custom_params', $varsToPush);
 			$this->_product_paramName = 'plugin_param';
 		} else {
 			$this->setConfigParameterable ('customfield_params', $varsToPush);
 			$this->_product_paramName = 'customfield_params';
 		}
-
 	}
 
 	/**
@@ -46,12 +44,13 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 *
 	 * @return bool
 	 */
-	function plgVmDeclarePluginParamsCustomVM3(&$data){
-
+	function plgVmDeclarePluginParamsCustomVM3(&$data)
+	{
 		return $this->declarePluginParams('custom', $data);
 	}
 
-	function plgVmGetTablePluginParams($psType, $name, $id, &$xParams, &$varsToPush){
+	function plgVmGetTablePluginParams($psType, $name, $id, &$xParams, &$varsToPush)
+	{
 		return $this->getTablePluginParams($psType, $name, $id, $xParams, $varsToPush);
 	}
 
@@ -61,7 +60,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @param string $psType
 	 * @param array  $data All the data of that cf
 	 */
-	function plgVmOnStoreInstallPluginTable($psType,$data) {
+	function plgVmOnStoreInstallPluginTable($psType,$data) 
+	{
 		vmdebug('data:',$data);
 	}
 
@@ -78,9 +78,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @return	boolean
 	 * @since	1.0
 	 */
-	function plgVmOnProductEdit($field, $product_id, &$row,&$retValue) {
+	function plgVmOnProductEdit($field, $product_id, &$row,&$retValue) 
+	{
 		if ($field->custom_element != $this->_name) return '';
-		if(version_compare(VM_VERSION, '2.9','lt'))$this->parseCustomParams ($field);
+		if (version_compare(VM_VERSION, '2.9','lt')) $this->parseCustomParams ($field);
 		//If the product is not saved do not proceed
 		if(empty($product_id)){
 			$retValue='<div style="clear:both;" class="alert alert-info"><span class="icon-info"></span><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_PLEASE_SAVE_PRODUCT').'</span></div>';
@@ -242,7 +243,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
-	function getProduct($id){
+	function getProduct($id)
+	{
 		$productModel=VmModel::getModel('Product');
 		$product = $productModel->getProduct ($id, false, false, false);
 		return $product;
@@ -258,7 +260,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 *
 	 * @since	1.0
 	 */
-	function plgVmOnStoreProduct($data,$plugin_param){
+	function plgVmOnStoreProduct($data,$plugin_param)
+	{
 		$plugin_name=key($plugin_param);
 		if($plugin_name!= $this->_name)return;
 		$is_stockablecustomfield=false;
@@ -329,7 +332,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @return	boolean
 	 * @since	1.0
 	 */
-	function isValidInput($input){
+	function isValidInput($input)
+	{
 		foreach ($input as $custom_id=>$inp){
 			$value= JString::trim($inp['value']);
 			if(isset($inp['value']) && empty($value))return false;
@@ -350,13 +354,15 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
-	function createChildProduct($data,$plugin_param){
+	function createChildProduct($data,$plugin_param)
+	{
 		//we do not want to store in child products
 		if($data['product_parent_id']>0)return;
 		vmdebug('STOCKABLE Parent id ',$data['virtuemart_product_id']);
 		//set the parent product and reset the product id
 		$data['product_parent_id']=(int)$data['virtuemart_product_id'];
 		$data['virtuemart_product_id']=0;
+		$data['field']=array();
 		//$data['isChild']=true;
 
 		if(!empty($plugin_param['product_name']))$data['product_name']=$plugin_param['product_name'];
@@ -400,7 +406,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
-	function setPriceDisplay(&$product){
+	function setPriceDisplay(&$product)
+	{
 		$product->product_price_display='';
 		if(empty($product->allPrices[$product->selectedPrice]['product_price']))return;
 		$vendor_model = VmModel::getModel('vendor');
@@ -421,7 +428,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 *
 	 * @since	1.0
 	 */
-	function plgVmOnDisplayProductFEVM3(&$product,&$group){
+	function plgVmOnDisplayProductFEVM3(&$product,&$group)
+	{
 		if ($group->custom_element != $this->_name) return '';
 		$group->show_title=false;
 		//display only in product details
@@ -460,8 +468,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		}
 
 		/*
-		 * we need to get the stockable cuctomfields of the parent, to load the child product ids from the params of the custom fields
-		 * We use them to load their custom fields and the order of display of the custom fields
+		 * we need to get the stockable cuctomfields of the parent, to load the child product ids from the params of their stockable custom fields
+		 * We use them to load their sub custom fields and the order of display of the sub custom fields
 		 */
 		$parent_customfields=CustomfieldStockablecustomfields::getCustomfields($product_parent_id,$custom_id);
 		$derived_product_ids=array();
@@ -522,6 +530,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 			}
 			$html.='</div>';
 			
+			//add a hidden input. This will trigger the plugin also in the cart
+			$html.='<input type="hidden" name="customProductData['.$product->virtuemart_product_id.']['.$custom_id.']['.$group->virtuemart_customfield_id.']" value="">';
+			
 			//print the scripts for the fe
 			if(!empty($stockable_customfields)){
 				$customfield_product_combinations=CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields);				
@@ -533,7 +544,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 				$doc->addScriptDeclaration($script);
 				$doc->addScript(JUri::root().'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 				//Adds a string as script to the end of your document 
-				$script2="var currentProductid=$product->virtuemart_product_id; var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper');";
+				$script2="
+				var currentProductid=$product->virtuemart_product_id; 
+				var stockableAreas=jQuery('.stockablecustomfields_fields_wrapper');";
                 //indicates ajax request
                 if(JFactory::getApplication()->input->get('tmpl')=='component')$script2.="Stockablecustomfields.setEvents(stockableAreas);";
 				vmJsApi::addJScript ( 'addStockableEvents', $script2);
@@ -553,11 +566,100 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	 * @return	array
 	 * @since	1.0
 	 */
-	function getProductUrls($product_ids, $category_id){
+	function getProductUrls($product_ids, $category_id)
+	{
 		$product_urls=array();
 		foreach ($product_ids as $pid){
 			$product_urls[$pid]=JRoute::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id='.(int)$category_id.'&virtuemart_product_id='.(int)$pid);
 		}
 		return $product_urls;
+	}
+	
+	/**
+	 * function triggered on display cart - VM3
+	 * 
+	 * @param 	$product
+	 * @param 	$productCustom
+	 * @param 	$html
+	 * 
+	 * @author	Sakis Terz
+	 * @return 	bool|string
+	 */
+	function plgVmOnViewCartVM3(&$product, &$productCustom, &$html) 
+	{	
+		if (empty($productCustom->custom_element) or $productCustom->custom_element != $this->_name) return false;
+		
+		$custom_id=$productCustom->virtuemart_custom_id;
+		$customfield=CustomfieldStockablecustomfields::getInstance($custom_id);
+		$custom_params=$customfield->getCustomfieldParams($custom_id);
+		$custom_ids=$custom_params['custom_id'];
+		$newProductCustoms=CustomfieldStockablecustomfields::getCustomfields($product->virtuemart_product_id,$custom_ids);
+		
+		if (!empty($newProductCustoms)) {
+			foreach ($newProductCustoms as $newProductCustom){
+				if ($newProductCustom->field_type!='E') {
+					$html  .= '<span class="product-field-type-S">';
+					$html  .= '<span class="product-field-label">'.JText::_($newProductCustom->custom_title).': </span>';
+					$html  .= '<span class="product-field-value">'.$newProductCustom->customfield_value.'</span>';
+					$html  .= '</span>';
+					$html.='<br/>';
+				}
+				else {	
+					$html  .= '<span class="product-field-type-E">';			
+					JPluginHelper::importPlugin ('vmcustom');
+					$dispatcher = JDispatcher::getInstance ();
+					$result= $dispatcher->trigger('plgVmOnStockableDisplayCart', array(&$product,&$newProductCustom,&$html));
+					$html  .='</span>';
+					$html.='<br/>';
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * function triggered on display cart module - VM3
+	 * 
+	 * @param 	$product
+	 * @param 	$productCustom
+	 * @param 	$html
+	 * 
+	 * @author	Sakis Terz
+	 * @return 	bool|string
+	 */
+	function plgVmOnViewCartModuleVM3(&$product, &$productCustom, &$html)
+	{
+		$this->plgVmOnViewCartVM3($product,$productCustom,$html);
+	}
+	
+	/**
+	 * function triggered on order display BE - VM3
+	 * 
+	 * @param 	$product
+	 * @param 	$productCustom
+	 * @param 	$html
+	 * 
+	 * @author	Sakis Terz
+	 * @return 	bool|string
+	 */
+	function plgVmDisplayInOrderBEVM3( &$product, &$productCustom, &$html) 
+	{
+		$this->plgVmOnViewCartVM3($product,$productCustom,$html,$inline_css=true);
+	}
+
+	/**
+	 * function triggered on order display FE - VM3
+	 * 
+	 * @param 	$product
+	 * @param 	$productCustom
+	 * @param 	$html
+	 * 
+	 * @author	Sakis Terz
+	 * @return 	bool|string
+	 */
+	function plgVmDisplayInOrderFEVM3( &$product, &$productCustom, &$html) 
+	{
+		$this->plgVmOnViewCartVM3($product,$productCustom,$html);
 	}
 }
