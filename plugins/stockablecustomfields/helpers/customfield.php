@@ -198,11 +198,10 @@ Class CustomfieldStockablecustomfields
 			}
 			else $q->where('pc.virtuemart_custom_id='.(int)$custom_id);
 		}
+		
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
-
 		if(is_array($product_id))$q->order('FIELD(pc.virtuemart_product_id, '.implode(',', $product_id).'),pc.ordering');
 		else $q->order('pc.ordering ASC');
-
 		$db->setQuery($q,$offset=false,$limit);
 
 		try
@@ -398,3 +397,4 @@ Class CustomfieldStockablecustomfields
 		return $return;
 	}
 }
+
