@@ -809,8 +809,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 	{
 		if ($group->custom_element != $this->_name) return '';
 		$group->show_title=false;
+		$input=JFactory::getApplication()->input;
 		//display only in product details
-		if((JFactory::getApplication()->input->get('option')!='com_virtuemart' && JFactory::getApplication()->input->get('view')!='productdetails') && JFactory::getApplication()->input->get('option')!='com_productbuilder' ){
+		if(!($input->get('option')=='com_virtuemart' && $input->get('view')=='productdetails') && $input->get('option')!='com_productbuilder'){
 			$group->display='';
 			$product->orderable=false;
 			return false;
