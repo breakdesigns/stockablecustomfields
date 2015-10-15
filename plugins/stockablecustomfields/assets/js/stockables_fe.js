@@ -3,7 +3,12 @@
  */
 if (typeof Stockablecustomfields === "undefined") {
 	var Stockablecustomfields = {
-			setEvents : function() {                	
+			setEvents : function() { 
+					
+					//call the function that creates the tooltips
+					if (CustomfieldsForAll.enableTooltips && typeof(CustomfieldsForAll.enableTooltips) === "function") {
+						CustomfieldsForAll.enableTooltips();
+					}
                 	
                 	if(typeof stockableCustomFieldsCombinations!='undefined'){
                 			var combinations=JSON.parse(stockableCustomFieldsCombinations);                			
@@ -267,8 +272,7 @@ if (typeof Stockablecustomfields === "undefined") {
 							else {
 								Virtuemart.updateContent(url); 
 							}
-						}
-						
+						}						
 					}
 				},	
 			versionCompare:function(version1, version2){
