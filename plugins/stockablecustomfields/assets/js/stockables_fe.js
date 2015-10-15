@@ -111,6 +111,9 @@ if (typeof Stockablecustomfields === "undefined") {
 						num_index++;
 					});					
 				},
+				/**
+				 * Selects an option if is the only 1 enabled
+				 */
 				setSelection:function(customs, from){
 					var enabled=new Array();
 
