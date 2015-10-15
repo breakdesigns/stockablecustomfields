@@ -90,7 +90,12 @@ if (typeof Stockablecustomfields === "undefined") {
 						if(matchedCombinations.length>0){ 
 							//Do not set next compatibles after the last custom
 							if(num_index<countCustoms-1){
+								//set next compatibles. In some cases (selects/dropdowns) when we deselect an option the browser auto-selects the 1st enabled
 								var reupdate=Stockablecustomfields.setNextCompatibles(customs_grouped,num_index,matchedCombinations);
+								
+								//automatically select an option when is the only enabled
+								if(reupdate==false && num_index==countCustoms-2)reupdate=Stockablecustomfields.setSelection(customs_grouped,num_index);
+								
 								if(reupdate)Stockablecustomfields.update(stockArea, callback);
 							}
 							//if last maybe we should load the product
@@ -105,6 +110,27 @@ if (typeof Stockablecustomfields === "undefined") {
 						}
 						num_index++;
 					});					
+				},
+				setSelection:function(customs, from){
+					var enabled=new Array();
+
+					//start with the custom fields below that
+					for(var i=from+1; i<customs.length; i++){ 
+						if(customs[i].type=='input'){
+							jQuery.each(customs[i].options,function(x,input){
+								if(!jQuery(input).attr('disabled'))enabled.push(input);
+							});
+						}
+					}
+					//only 1 enabled. Select it
+					if(enabled.length==1){ 
+						var inp=enabled.pop();
+						if(!jQuery(inp).attr('checked')){
+							jQuery(inp).attr('checked','checked');
+							return true;
+						}
+					}
+					return false;
 				},
 				/**
 				 * Groups the custom fields based on their name and returns groups.
