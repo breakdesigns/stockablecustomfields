@@ -29,7 +29,7 @@ if($function=='jSelectCustom'){
 	$lang->load('plg_vmcustom_stockablecustomfields');
 }
 
-//in versions lower to J3 load also the chosen scripts/styles
+//in versions lower to J3 load also the chosen scripts/styles 
 if(version_compare(JVERSION, '3.0','<')){	
 	$document->addStyleSheet(JURI::root().'components/com_virtuemart/assets/css/chosen.css');
 	$document->addScript(JURI::root().'components/com_virtuemart/assets/js/chosen.jquery.min.js');
