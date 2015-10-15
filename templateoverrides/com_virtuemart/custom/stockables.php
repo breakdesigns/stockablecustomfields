@@ -44,7 +44,6 @@ if($function=='jSelectCustom'){
 $incompatible_customs=array('C','D','T','M','G','A','X','Y','R','Z');
 //get the plugins that can be used
 $compatible_plugins=CustomfieldStockablecustomfields::getCompatiblePlugins();
-print_r($compatible_plugins);
 
 $customs = $this->customs->items;
 ?>
@@ -68,7 +67,7 @@ $customs = $this->customs->items;
 			</div>
 
 			<div class="btn-group pull-left">
-			<?php echo $this->customs->customsSelect;?>
+			<?php echo $this->customsSelect;?>
 			</div>
 		</div>
 		<table class="adminlist table table-striped">
