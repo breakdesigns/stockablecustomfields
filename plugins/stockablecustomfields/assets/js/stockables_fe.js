@@ -3,10 +3,11 @@
  */
 if (typeof Stockablecustomfields === "undefined") {
 	var Stockablecustomfields = {
+			
 			setEvents : function() { 
-					
+					StockabklesStart=true
 					//call the function that creates the tooltips
-					if (CustomfieldsForAll.enableTooltips && typeof(CustomfieldsForAll.enableTooltips) === "function") {
+					if (typeof CustomfieldsForAll!='undefined' && typeof CustomfieldsForAll.enableTooltips== "function") {
 						CustomfieldsForAll.enableTooltips();
 					}
                 	
@@ -19,6 +20,7 @@ if (typeof Stockablecustomfields === "undefined") {
 						stockableAreas.each(function() {
 								var stockArea = jQuery(this);
 			                    Stockablecustomfields.setSelected(stockArea);
+			                    Stockablecustomfields.handleOutOfStock(stockArea);
 			
 								stockArea.find('input').change(function(){
 									Stockablecustomfields.update(stockArea);
@@ -29,7 +31,7 @@ if (typeof Stockablecustomfields === "undefined") {
 							});
 					}
 				},
-                setSelected:function(stockArea){
+                setSelected:function(stockArea){ 
                     var currentCombination=false;
                     var currentProductid=jQuery("input[name='stockable_current_product_id']").val();
                     //find the current combination
@@ -39,7 +41,7 @@ if (typeof Stockablecustomfields === "undefined") {
                     
                     if(currentCombination){ 
                         var customs=stockArea.find( "[name^='customProductData']" );
-                        var customs_grouped=Stockablecustomfields.groupByName(customs);
+                        customs_grouped=Stockablecustomfields.groupByName(customs, stockArea);
                         
                         if(customs.length>0){ 
                         	Stockablecustomfields.setSelectedFields(customs_grouped,currentCombination);
@@ -49,12 +51,58 @@ if (typeof Stockablecustomfields === "undefined") {
                     }
                 },
                 /**
+                 * Disable the out of stock combinations (if it should)
+                 * @param stockArea
+                 * @returns
+                 */
+                handleOutOfStock:function(stockArea){                	
+                	if(typeof stockable_out_of_stock_display!="undefined" && stockable_out_of_stock_display!='enabled'){
+                		var outStockCombination=[];
+                		//copy by value //js copies variables by reference
+                		var tempCombinations=Stockablecustomfields.combinations.slice();
+                		
+                		
+                		//find the out of stock combinations
+	                	jQuery.each(Stockablecustomfields.combinations,function(index1,combination){	              		
+	                        if(parseInt(combination.stock)<=0) {	                        	
+	                			jQuery.each(combination.customfield_ids, function(index2, customfield_id){
+	                				outStockCombination.push(customfield_id);
+	                			});	                			
+	                		}
+	                      });
+	                	//copy by value //js copies variables by reference
+                		var tempOutStockCombination=outStockCombination.slice();
+	                	
+	                	/*
+	                	 * check again the out of stock custom fields ids versus the other combinations
+	                	 * Maybe a custom field id used in other combinations and has stock
+	                	 */ 
+	                	jQuery.each(tempCombinations,function(index1,combination){
+	                		 if(parseInt(combination.stock)>0){
+	                			 jQuery.each(combination.customfield_ids, function(index2, customfield_id){
+		                			 jQuery.each(outStockCombination,function(index3,customfield_id2){
+		                				 if(customfield_id==customfield_id2)tempOutStockCombination.splice(tempOutStockCombination.indexOf(customfield_id2), 1);
+		                			 });	
+	                			 });
+	                		 }
+	                		 
+	                	});	 
+	                	
+	                	//Time to disable the out of stock custom field ids
+	                	jQuery.each(tempOutStockCombination, function(index1, customfield_id){   				            				
+            				var element=stockArea.find("[value='"+customfield_id+"']");
+            				jQuery(element).attr('disabled','disabled');
+            			});  
+	                	
+                	}
+                },
+                /**
                  * Used both for the stockable custom fields in Virtuemart and in Prod. Builder
                  */
-				update:function(stockArea, callback){
+				update:function(stockArea, callback){ 
 					// get the customfields
 					var customs=stockArea.find( "[name^='customProductData']" );
-					var customs_grouped=Stockablecustomfields.groupByName(customs); 
+					var customs_grouped=Stockablecustomfields.groupByName(customs, stockArea); 
 					var countCustoms=customs_grouped.length; 
 					var emptyCustoms=new Array();
 					var currentCombinations=new Array();
@@ -143,12 +191,12 @@ if (typeof Stockablecustomfields === "undefined") {
 				/**
 				 * Groups the custom fields based on their name and returns groups.
 				 */
-				groupByName:function(customs){
+				groupByName:function(customs, stockArea){
 					var obj={};
 					var array=[];
 					var options=[];
 					//create an obj with prop the names of the inputs/selects. 1 name -> 1 var
-					customs.each(function(index,custom){
+					customs.each(function(index,custom){ 
 						var name=jQuery(this).attr('name');
 						//remove the brackets in case of array variables
 						name_filtered=name.replace(/[\[\]]/g,'');						
@@ -163,11 +211,11 @@ if (typeof Stockablecustomfields === "undefined") {
 						else if(jQuery(this).is('input')){							
 							
 							if(typeof obj[name_filtered]=='undefined' && !jQuery(this).attr('checked')){
-								var options=jQuery('input[name="'+name+'"]');
+								var options=stockArea.find('input[name="'+name+'"]');
 								customObj={options:options, selected_option:false, value:false, type:'input',name:name_filtered}; 								
 							}
 							else if(jQuery(this).attr('checked')){								
-								var options=jQuery('input[name="'+name+'"]');
+								var options=stockArea.find('input[name="'+name+'"]');
 								customObj={options:options, selected_option:jQuery(this), value:jQuery(this).val(), type:'input',name:name_filtered};				
 							}
 						}
@@ -197,7 +245,7 @@ if (typeof Stockablecustomfields === "undefined") {
 							if(customs[i].type=='input'){	
 								//in case of inputs we have to iterate all until we find the 1 with the same value
 								jQuery.each(customs[i].options,function(x,input){									
-									if(combination.customfield_ids[i]==jQuery(input).val()){ 							
+									if(combination.customfield_ids[i]==jQuery(input).val() && (stockable_out_of_stock_display=='enabled' || parseInt(combination.stock)>0)){ 							
 										jQuery(input).removeAttr('disabled');
 										return false;
 									}
@@ -206,12 +254,14 @@ if (typeof Stockablecustomfields === "undefined") {
 							else if(customs[i].type=='select'){								
 								jQuery.each(customs[i].options,function(){
 									var option_value=jQuery(this).val();
-									if(combination.customfield_ids[i]==option_value)jQuery(this).removeAttr('disabled');
+									//if it's a combination value and should be enabled according to it's stock and the out of stock display
+									if(combination.customfield_ids[i]==option_value && (stockable_out_of_stock_display=='enabled' || parseInt(combination.stock)>0))jQuery(this).removeAttr('disabled');
 									//removed disabled also in case of empty options
 									if(!option_value || option_value=="0")jQuery(this).removeAttr('disabled');
 								});
 							}
 						});	
+
 						//if disabled and selected, remove selection
 						if(customs[i].type=='input'){
 							if(customs[i].selected_option!==false && (jQuery(customs[i].selected_option).attr('checked')=='checked' || jQuery(customs[i].selected_option).attr('checked')==true) && (jQuery(customs[i].selected_option).attr('disabled')=='disabled' || jQuery(customs[i].selected_option).attr('disabled')==true)){
@@ -221,7 +271,7 @@ if (typeof Stockablecustomfields === "undefined") {
 						else if(customs[i].type=='select'){
 							var select=jQuery(customs[i].selected_option); 
 							var selected=jQuery(select).find('option:selected');
-							if(selected!=false && jQuery(selected).attr('disabled')=='disabled' || jQuery(selected).attr('disabled')==true){
+							if((selected!=false && jQuery(selected).attr('disabled')=='disabled' || jQuery(selected).attr('disabled')==true) && StockabklesStart==false){
 								jQuery(selected).removeAttr('selected');
 								//when we remove selected, the browser sets the selection to an enabled option. Hence we need reupdate
 								var reupdate=true;
@@ -229,6 +279,7 @@ if (typeof Stockablecustomfields === "undefined") {
 						}
 						
 					}
+					StockabklesStart=false;
 					return reupdate;
 				},
 				

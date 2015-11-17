@@ -308,7 +308,6 @@ foreach ($this->printed_messages as $message){?>
 		<?php endif; ?>
 	</tbody>
 </table>
-<p><a href="http://breakdesigns.net/stockablecustomfields-manual#create-bundle" target="_blank">Please check our Manual to see how to proceed further</a> </p>
 		<?php
 	}
 }

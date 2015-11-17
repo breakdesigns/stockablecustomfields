@@ -16,25 +16,25 @@ $wrapper_id='stockablecustomfields_field_wrapper_'.$viewData->virtuemart_customf
 
 <div class="stockablecustomfields_field_wrapper control-group" id="<?php echo $wrapper_id?>">
 <?php
-$fist_option=array();
-$selects=array();
-//empty options should exist only on the parent product loading
-if($viewData->product->product_parent_id==0 && !$viewData->isderived)
-$fist_option=array('value'=>0, 'text'=>JText::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_OPTION'));
 
-foreach ($options as $key=>$v) {
-	$label=JText::_($v->value);
-	$selects[] = array('value' => $v->id, 'text' =>$label );
-	if(!empty($v->selected))$selected=$key;
-}
-if(isset($selected))$selected=$selected+1;
-else $selected=0;
-
-if(!empty($fist_option))array_unshift($selects,$fist_option);
-if(!empty($selects)){?>
+if(!empty($options)){?>
 <div>
-	<?php 
-	echo JHTML::_('select.genericlist', $selects,$field_name,'','value','text',$selects[$selected],$id=$select_id,true);?>
+<select name="<?php echo $field_name?>" id="<?php echo $select_id?>">
+<?php 
+    //empty options should exist only on the parent product loading
+    if($viewData->product->product_parent_id==0 && !$viewData->isderived):?>
+        <option value="0"><?php echo JText::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_OPTION');?></option>
+    <?php 
+    endif; ?>
+    
+    <?php 
+    foreach ($options as $key=>$v) {
+        $selected='';
+        if(!empty($v->selected))$selected='selected="selected"'?>
+        <option value="<?php echo $v->id?>" <?php echo $selected;?>><?php echo JText::_($v->value)?></option>
+        <?php 
+    }?>
+</select>
 </div>
 <?php 
 }?>

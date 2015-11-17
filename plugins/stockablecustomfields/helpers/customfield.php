@@ -1,4 +1,5 @@
 <?php
+use Joomla\Utilities\ArrayHelper;
 /**
  * @version		$Id: customfield.php 2014-12-19 18:57 sakis Terz $
  * @package		stockablecustomfields
@@ -178,7 +179,7 @@ Class CustomfieldStockablecustomfields
 	 * @return	JTable	 A database object
 	 * @since	1.0
 	 */
-	public static function getCustomfields($product_id=0,$custom_id=0,$limit=false)
+	public static function getCustomfields($product_id=0, $custom_id=0, $limit=false)
 	{
 		if(empty($product_id)&& empty($custom_id))return false;
 		$db=JFactory::getDbo();
@@ -202,7 +203,7 @@ Class CustomfieldStockablecustomfields
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
 		if(is_array($product_id))$q->order('FIELD(pc.virtuemart_product_id, '.implode(',', $product_id).'),pc.ordering');
 		else $q->order('pc.ordering ASC');
-		$db->setQuery($q,$offset=false,$limit);
+		$db->setQuery($q,$offset=false, $limit);
 
 		try
 		{
@@ -287,47 +288,54 @@ Class CustomfieldStockablecustomfields
 	 *
 	 * @param 	array $product_ids
 	 *
-	 * @return	array the product ids
+	 * @return	array the the product objects or the product ids
 	 * @since	1.0
 	 */
-	public static function getOrderableProducts($product_ids)
+	public static function getOrderableProducts($product_ids, $custom_params, $exclude=false)
 	{
-		if (!VmConfig::get('use_as_catalog',0)) {
-			JArrayHelper::toInteger($product_ids);
-			$db=JFactory::getDbo();
-			$q=$db->getQuery(true);
-			$q->select('p.virtuemart_product_id')->from('#__virtuemart_products AS p');
-			$q->where('p.published=1');
+		ArrayHelper::toInteger($product_ids);
+		$db=JFactory::getDbo();
+		$q=$db->getQuery(true);
+		$q->select('p.virtuemart_product_id, p.`product_in_stock` - p.`product_ordered` AS stock')->from('#__virtuemart_products AS p');
+		$q->where('p.published=1');
 
-			//stock management
-			if (VmConfig::get('stockhandle','none')=='disableit' || VmConfig::get('stockhandle','none')=='disableit_children') {
-				$q->where('p.`product_in_stock` - p.`product_ordered` >0');
-			}
-			$q->where('p.virtuemart_product_id IN('.implode(',', $product_ids).')');
-			//shopper groups
-			$q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
-			$usermodel = VmModel::getModel ('user');
-			$currentVMuser = $usermodel->getCurrentUser ();
-			$virtuemart_shoppergroup_ids = (array)$currentVMuser->shopper_groups;
-			JArrayHelper::toInteger($virtuemart_shoppergroup_ids);
-			if (is_array ($virtuemart_shoppergroup_ids) && !empty($virtuemart_shoppergroup_ids)) {
-				$q->where('(ps.`virtuemart_shoppergroup_id` IS NULL OR ps.`virtuemart_shoppergroup_id` IN('.implode(',', $virtuemart_shoppergroup_ids).'))');
-			}
-			else $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
-			$quoted_product_ids=array_map(function($n){$db=JFactory::getDbo(); return $db->quote($n);}, $product_ids);
-			$q->order('FIELD(p.virtuemart_product_id, '.implode(',', $quoted_product_ids).')');
-			$db->setQuery($q);
+		//stock management when it's not catalogue
+		if (!VmConfig::get('use_as_catalog',0) && (VmConfig::get('stockhandle','none')=='disableit' || $custom_params['outofstockcombinations']=='hidden')) {
+		    
+		    /*
+		     * we may want to exclude a product no matter it has stock
+		     * this used mainly when the parent is stockable. We want to display it's combination
+		     */
+			if(!empty($exclude))$q->where('(p.`product_in_stock` - p.`product_ordered` >0 OR p.`virtuemart_product_id`='.(int)$exclude.')');
+			else $q->where('p.`product_in_stock` - p.`product_ordered` >0');
+		}
+		$q->where('p.virtuemart_product_id IN('.implode(',', $product_ids).')');
+		
+		//shopper groups
+		$q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
+		$usermodel = VmModel::getModel ('user');
+		$currentVMuser = $usermodel->getCurrentUser ();
+		$virtuemart_shoppergroup_ids = (array)$currentVMuser->shopper_groups;
+		ArrayHelper::toInteger($virtuemart_shoppergroup_ids);
+		if (is_array ($virtuemart_shoppergroup_ids) && !empty($virtuemart_shoppergroup_ids)) {
+			$q->where('(ps.`virtuemart_shoppergroup_id` IS NULL OR ps.`virtuemart_shoppergroup_id` IN('.implode(',', $virtuemart_shoppergroup_ids).'))');
+		}
+		else $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
+		
+		$quoted_product_ids=array_map(function($n){$db=JFactory::getDbo(); return $db->quote($n);}, $product_ids);
+		$q->order('FIELD(p.virtuemart_product_id, '.implode(',', $quoted_product_ids).')');
+		$db->setQuery($q);
 
-			try
-			{
-				$result=$db->loadColumn();
-			}
-			catch (RuntimeException $e)
-			{
-				JError::raiseWarning(500, $e->getMessage());
-				$result=false;
-			}
-		}else $result=$product_ids;
+		try
+		{
+			$result=$db->loadAssocList('virtuemart_product_id');
+		}
+		catch (RuntimeException $e)
+		{
+			JError::raiseWarning(500, $e->getMessage());
+			$result=false;
+		}		
+		
 		return $result;
 	}
 
@@ -362,11 +370,12 @@ Class CustomfieldStockablecustomfields
 	 * Creates arrays with the customfield combinations that generate a product
 	 *
 	 * @param 	array 	$customfields
+	 * @param   array   $product_array An associative array with the products, using as key the product id
 	 *
 	 * @return	array
 	 * @since	1.0
 	 */
-	public static function getProductCombinations($customfields)
+	public static function getProductCombinations($customfields, $product_array)
 	{
 		$products=array();
 		$products_final=array();
@@ -389,7 +398,7 @@ Class CustomfieldStockablecustomfields
 		}
 		//change the form to be easier to handle as json object
 		foreach ($products as $pid=>$p_array) {
-			$products_final[]=array('product_id'=>$pid,'customfield_ids'=>$p_array);
+			$products_final[]=array('product_id'=>$pid,'customfield_ids'=>$p_array, 'stock'=>$product_array[$pid]['stock']);
 		}
 
 		$return=new stdClass();
