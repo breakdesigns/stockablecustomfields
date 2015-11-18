@@ -29,7 +29,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$varsToPush = array(
 			'parentOrderable'=>array(0,'int'),	
 			'custom_id'=> array('', 'array'),
-		    'outofstockcombinations'=> array('disabled', 'string'),
+		    'outofstockcombinations'=> array('enabled', 'string'),
 			'child_product_id'=>array(0,'int'),				
 		);
         $release=VmConfig::getInstalledVersion();
@@ -835,7 +835,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin {
 		$custom_id=$group->virtuemart_custom_id;
 		$customfield=CustomfieldStockablecustomfields::getInstance($custom_id);
 		$custom_params=$customfield->getCustomfieldParams($custom_id);
-		$custom_params['outofstockcombinations']=!empty($custom_params['outofstockcombinations'])?$custom_params['outofstockcombinations']:'disabled';
+		$custom_params['outofstockcombinations']=!empty($custom_params['outofstockcombinations'])?$custom_params['outofstockcombinations']:'enabled';
 
 		if(empty($group->pb_group_id))$group->pb_group_id='';
 		$group->custom_params=$custom_params;
