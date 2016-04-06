@@ -17,6 +17,7 @@ require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'s
 JHtml::_('bootstrap.tooltip');
 JHtml::_('behavior.framework', true);
 JHtml::_('formbehavior.chosen', 'select');
+JHTML::_('behavior.modal');
 
 
 $app = JFactory::getApplication();
@@ -67,7 +68,14 @@ $customs = $this->customs->items;
 			</div>
 
 			<div class="btn-group pull-left">
-			<?php echo $this->customs->customsSelect;?>
+	
+			<?php 
+			/*
+			 * backwards compatibility VM 3.0.10 and up uses s$this->customsSelect
+			 * previous versions use $this->customs->customsSelect
+			 */
+			if(!empty($this->customsSelect))echo $this->customsSelect;
+			else if(!empty($this->customs->customsSelect))echo $this->$this->customs->customsSelect;?>
 			</div>
 		</div>
 		<table class="adminlist table table-striped">
@@ -130,8 +138,10 @@ $customs = $this->customs->items;
 					<td align="left">
 						<?php 
 						$link = "index.php?view=custom&keyword=".urlencode($keyword)."&custom_parent_id=".$custom->custom_parent_id."&option=com_virtuemart&layout=stockables&tmpl=component&function=".$function;
-						$text = $lang->hasKey($custom->custom_parent_title) ? JText::_($custom->custom_parent_title) : $custom->custom_parent_title;
-                        echo JHtml::_('link', JRoute::_($link,FALSE),$text, array('title' => JText::_('COM_VIRTUEMART_FILTER_BY').' '.htmlentities($text)));
+						$text='';
+						if(!empty($custom->custom_parent_title))$text = $lang->hasKey($custom->custom_parent_title) ? JText::_($custom->custom_parent_title) : $custom->custom_parent_title;
+						else if(!empty($custom->group_title))$text = $lang->hasKey($custom->group_title) ? JText::_($custom->group_title) : $custom->group_title;
+						echo JHtml::_('link', JRoute::_($link,FALSE),$text, array('title' => JText::_('COM_VIRTUEMART_FILTER_BY').' '.htmlentities($text)));
                         ?>
                     </td>                    
 					<td align="left"><?php 
