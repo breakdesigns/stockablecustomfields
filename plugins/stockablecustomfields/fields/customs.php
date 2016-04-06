@@ -15,7 +15,7 @@ jimport('joomla.form.formfield');
 JHtml::_('behavior.framework', true);
 JHtml::_('behavior.modal');
 
-if(!class_exists('CustomfieldStockablecustomfields'))require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php'); 
+if(!class_exists('CustomfieldStockablecustomfields'))require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
 
 /**
  *
@@ -36,16 +36,15 @@ Class JFormFieldCustoms extends JFormField{
 		$virtuemart_custom_id=$jinput->get('virtuemart_custom_id',array(),'ARRAY');
 		if(is_array($virtuemart_custom_id))$virtuemart_custom_id=end($virtuemart_custom_id);
 		if (empty($virtuemart_custom_id)) return '<div class="alert alert-info"><span>'.JText::_('PLG_STOCKABLECUSTOMFIELDS_SAVE_CUSTOMFIELD_BEFORE_ADDING_CUSTOMS').'</span></div';
-				
+
 		$document=JFactory::getDocument();
 		$document->addStyleSheet( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/css/stockables_be.css');
 		$document->addStyleSheet( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/css/mybootstrap.css');
 		$document->addScript(JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/js/backend.js');
-		$selectedElements=array();	
-		
-		
-		
-		if(!empty($this->value))$selectedElements=$this->value; 
+		$selectedElements=array();
+
+
+		if(!empty($this->value))$selectedElements=$this->value;
 		$display=empty($selectedElements)?'none':'block';
 		$html='';
 		$html.='
@@ -57,12 +56,12 @@ Class JFormFieldCustoms extends JFormField{
 			</div>';
 
 		$html.='<ul class="sortable" id="elements_list" style="display:'.$display.'">';
-		
+
 		//iterate to print the elements
 		if(!empty($selectedElements) && is_array($selectedElements)){
-			$isAssignedToProduct=CustomfieldStockablecustomfields::getCustomfields($product=false,$virtuemart_custom_id,$limit=1); 
+			$isAssignedToProduct=CustomfieldStockablecustomfields::getCustomfields($product=false,$virtuemart_custom_id,$limit=1);
 			foreach ($selectedElements as $el){
-				//get the custom		
+				//get the custom
 				$customObject=CustomfieldStockablecustomfields::getCustom($el);
 				$html.='
 				<li cclass="bd_element" id="element_'.$el.'">
@@ -70,23 +69,23 @@ Class JFormFieldCustoms extends JFormField{
 					<span class="element_type">'.JText::_(CustomfieldStockablecustomfields::getCustomTypeName($customObject->field_type)).'</span>
 					<span class="element_id">'.$el.'</span>
 					<input type="hidden" name="custom_id[]" value="'.$el.'"/>
-					<span class="bd_listtoolbar">						
+					<span class="bd_listtoolbar">
 						<span class="breakdesigns_btn element_move_btn" title="Drag to Move"><i class="bdicon-move"></i></span>';
 				//if there are assignments cannot change the custom fields
-				if(empty($isAssignedToProduct))$html.='<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>';		
-				$html.='	
+				if(empty($isAssignedToProduct))$html.='<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>';
+				$html.='
 					</span>
 				</li>';
 			}
 		}
-		
-		
+
+
 		$html.='</ul>';
-		
+
 		//if there are assignments cannot change the custom fields
 		if(empty($isAssignedToProduct)){
 			$html.='
-			<div class="elements_toolbar">			
+			<div class="elements_toolbar">
 				<a class="modal btn" role="modal" data-toggle="modal" title="'.JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_DESC').'"
 				href="index.php?option=com_virtuemart&view=custom&layout=stockables&tmpl=component&function=jSelectCustom"
 				onclick="return false;" rel="{handler: \'iframe\', size: {x: 820, y: 550}}">
@@ -107,7 +106,7 @@ Class JFormFieldCustoms extends JFormField{
 				var product_id=jQuery(this).parent().parent("li").find("input").attr("value");
 				removeProduct(product_id);
 			});
-			var selectedElements=Array('.implode(',', $selectedElements).'); 
+			var selectedElements=Array('.implode(',', $selectedElements).');
 		</script>';
 
 		$html=$html.$script;
