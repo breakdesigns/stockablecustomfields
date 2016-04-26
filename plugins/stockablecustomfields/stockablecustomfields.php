@@ -1015,7 +1015,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 				if ($newProductCustom->field_type!='E') {
 					$html  .= '<span class="product-field-type-S">';
 					$html  .= '<span class="product-field-label">'.JText::_($newProductCustom->custom_title).': </span>';
-					$html  .= '<span class="product-field-value">'.$newProductCustom->customfield_value.'</span>';
+					$html  .= '<span class="product-field-value">'.JText::_($newProductCustom->customfield_value).'</span>';
 					$html  .= '</span>';
 					$html.='<br/>';
 				}
