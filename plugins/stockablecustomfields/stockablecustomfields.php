@@ -186,14 +186,21 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
     		    jQuery(\'.stcoakbles_add_customfield\').hide();
     		    jQuery(\'#stcoakbles_add_customfield'.$row.'\').show();
         		jQuery(\'.stcoakbles_add_customfield\').on(\'click\',function(){
-            		jQuery.getJSON(\''.JURI::root(false).'administrator/index.php?option=com_virtuemart&view=product&task=getData&format=json&virtuemart_product_id='.$product_id.'&type=fields&id='.$parent_custom_id.'&row=\'+nextCustom,
+    		        if(typeof nextCustom !=\'undefined\') {
+    		              var counter=nextCustom;
+    		              nextCustom++
+		              }
+    		        else {
+                          var counter=Virtuemart.nextCustom;
+    		              Virtuemart.nextCustom++;
+		              }
+    		       	jQuery.getJSON(\''.JURI::root(false).'administrator/index.php?option=com_virtuemart&view=product&task=getData&format=json&virtuemart_product_id='.$product_id.'&type=fields&id='.$parent_custom_id.'&row=\'+counter,
             		function(data) {
             			jQuery.each(data.value, function(index, value){
             				jQuery(\'#custom_field\').append(value);
             				jQuery(\'#custom_field\').trigger(\'sortupdate\');
             			});
             		});
-            		nextCustom++;
         		 });
     		 </script>';
 		}
@@ -603,6 +610,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		if(!empty($plugin_param['product_name']))$data['product_name']=$plugin_param['product_name'];
 		if(!empty($plugin_param['product_sku']))$data['product_sku']=$plugin_param['product_sku'];
 		if(!empty($plugin_param['product_in_stock']))$data['product_in_stock']=$plugin_param['product_in_stock'];
+		else $data['product_in_stock'] =0;
 
 		//reset prices
 		if(!empty($data['mprices']['product_override_price']))unset($data['mprices']['product_override_price']);
@@ -830,7 +838,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		if($input->get('option')!='com_virtuemart' && $input->get('option')!='com_customfilters' && $input->get('option')!='com_productbuilder')return false;
 
 		//can be added to cart only in product details
-		if($input->get('option')=='com_virtuemart' && $input->get('view')!='productdetails')$product->orderable=false;
+		if(
+		    ($input->get('option')=='com_virtuemart' && $input->get('view')!='productdetails') ||
+		    ($input->get('option')=='com_customfilters' && $input->get('view')=='products'))$product->orderable=false;
 
         // we want this function to run only once. Not for every customfield record of this type
         static $printed = false;
