@@ -1,5 +1,5 @@
 /**
- * Copyright 2015-2016 breakdesigns.net
+ * Copyright 2015-2017 breakdesigns.net
  */
 if (typeof Stockablecustomfields === "undefined") {
 	var Stockablecustomfields = {
