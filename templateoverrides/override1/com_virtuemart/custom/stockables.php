@@ -3,7 +3,7 @@
  * @version		$Id: simple 2014-12-17 18:16 sakis Terz $
  * @package		stockablecustomfields
  * @author		Sakis Terz
- * @copyright	Copyright (C)2015 breakdesigns.net . All rights reserved.
+ * @copyright	Copyright (C)2017 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 

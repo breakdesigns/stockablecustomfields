@@ -1,9 +1,8 @@
 <?php
 /**
- * @version		$Id: default.php 2014-12-15 20:10 sakis Terz $2
- * @package		stockablecustomfield
- * @copyright	Copyright (C) 2014-2015 breakdesigns.net . All rights reserved.
- * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ * @package	stockablecustomfield
+ * @copyright	Copyright (C) 2014-2017 breakdesigns.net . All rights reserved.
+ * @license	GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 if (!defined('_JEXEC')) die;

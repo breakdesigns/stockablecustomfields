@@ -1,9 +1,9 @@
 <?php
 /**
- * @version		$Id: simple 2015-05-06 19:16 sakis Terz $
+ * @version		$Id: simple 2017-05-06 19:16 sakis Terz $
  * @package		stockable custom fields
  * @author		Sakis Terz
- * @copyright	Copyright (C)2014-2015 breakdesigns.net . All rights reserved.
+ * @copyright	Copyright (C)2014-2017 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 

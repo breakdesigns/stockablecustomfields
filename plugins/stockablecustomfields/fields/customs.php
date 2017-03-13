@@ -1,9 +1,8 @@
 <?php
 /**
  * @package stockablecustomfields
- * @version $Id: fields/customs.php  2014-12-18 sakisTerzis $
  * @author Sakis Terzis (sakis@breakDesigns.net)
- * @copyright	Copyright (C) 2014 breakDesigns.net. All rights reserved
+ * @copyright	Copyright (C) 2017 breakDesigns.net. All rights reserved
  * @license	GNU/GPL v2
  */
 
