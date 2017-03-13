@@ -59,7 +59,11 @@
 		</language>
 		<language tag="de-DE">de-DE/de-DE.plg_vmcustom_stockablecustomfields.ini
 		</language>
+		<language tag="it-IT">it-IT/it-IT.plg_vmcustom_stockablecustomfields.ini
+		</language>
 		<language tag="nl-NL">nl-NL/nl-NL.plg_vmcustom_stockablecustomfields.ini
+		</language>
+		<language tag="sk-SK">sk-SK/sk-SK.plg_vmcustom_stockablecustomfields.ini
 		</language>
 	</languages>
 	<config>
