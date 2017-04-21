@@ -1,0 +1,18 @@
+@CHARSET "UTF-8";
+
+.selected_element td{
+	background-color:#5cb85c !important;
+	color: #ffffff;
+}
+
+.productRemoveBtn{
+	display:none;
+}
+
+.selected_element td .productRemoveBtn{
+	display:inline-block;
+}
+
+.selected_element td .productAddBtn{
+	display:none;
+}

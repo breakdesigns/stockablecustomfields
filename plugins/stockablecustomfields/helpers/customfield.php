@@ -1,9 +1,8 @@
 <?php
 use Joomla\Utilities\ArrayHelper;
 /**
- * @version		$Id: customfield.php 2014-12-19 18:57 sakis Terz $
  * @package		stockablecustomfields
- * @copyright	Copyright (C)2014-2015 breakdesigns.net . All rights reserved.
+ * @copyright	Copyright (C)2014-2017 breakdesigns.net . All rights reserved.
  * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 

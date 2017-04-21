@@ -2,14 +2,14 @@
 <extension version="2.5" type="plugin" group="vmcustom"
 	method="upgrade">
 	<name>Stockable Customfields</name>
-	<creationDate>2016-05-06</creationDate>
+	<creationDate>2016-03-13</creationDate>
 	<author>breadkesigns</author>
 	<authorEmail>info@breakdesigns.net</authorEmail>
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
-	<copyright>Copyright(c) 2015-2016 breakdesigns.net</copyright>
+	<copyright>Copyright(c) 2015-2017 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
-	<version>1.4.6</version>
-	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.4.6 | 06 April 2016)</i></h3>
+	<version>1.4.7-beta1</version>
+	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.4.7 | 13 March 2017)</i></h3>
     <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_150.png"/></span>
     <p style="margin-top:5px; font-size:12px; font-weight:0;">Create stockable variations using custom fields</p>
     <p><a href="http://breakdesigns.net/stockable-customfields-manual" target="_blank">Please check our Manual to see how to proceed further</a>
@@ -59,7 +59,11 @@
 		</language>
 		<language tag="de-DE">de-DE/de-DE.plg_vmcustom_stockablecustomfields.ini
 		</language>
+		<language tag="it-IT">it-IT/it-IT.plg_vmcustom_stockablecustomfields.ini
+		</language>
 		<language tag="nl-NL">nl-NL/nl-NL.plg_vmcustom_stockablecustomfields.ini
+		</language>
+		<language tag="sk-SK">sk-SK/sk-SK.plg_vmcustom_stockablecustomfields.ini
 		</language>
 	</languages>
 	<config>
