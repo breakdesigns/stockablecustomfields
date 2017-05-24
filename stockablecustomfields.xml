@@ -40,6 +40,7 @@
 
 	<files folder="plugins/stockablecustomfields">
 		<filename plugin="stockablecustomfields">stockablecustomfields.php</filename>
+		<filename>bootstrap.php</filename>
 		<filename>index.html</filename>
 		<folder>assets</folder>
 		<folder>fields</folder>

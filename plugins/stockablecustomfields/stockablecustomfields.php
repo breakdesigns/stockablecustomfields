@@ -13,8 +13,7 @@ jimport('joomla.form.formfield');
 JHtml::_('behavior.framework', true);
 JHtml::_('behavior.modal');
 
-if(!class_exists('vmCustomPlugin')) require(JPATH_VM_PLUGINS.DIRECTORY_SEPARATOR.'vmcustomplugin.php');
-require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
+require_once __DIR__.DIRECTORY_SEPARATOR.'bootstrap.php';
 
 /**
  * Main plug-in class
