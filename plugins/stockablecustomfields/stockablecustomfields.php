@@ -646,7 +646,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
 	/**
 	 * Create a media/image for a specific product
-	 * @param  file $file
+	 * @param  array $file
 	 * @param  int  $product_id    The product id
 	 *
 	 * @since  1.4.0
@@ -661,7 +661,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 	    $extension = strtolower(JFile::getExt($file['name']));
 
 	    //Tha max allowed file in bytes
-	    $max_size=500000; //500MB
+	    $max_size=500000000; //~50MB
 
 	    if($file['size']>$max_size){
 	        throw new RuntimeException('File:'.$file['name'].' exceeds the max limit of '.$max_size);
@@ -1012,8 +1012,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 	 */
 	public function plgVmOnViewCartVM3(&$product, &$productCustom, &$html)
 	{
-		if (empty($productCustom->custom_element) or $productCustom->custom_element != $this->_name) return false;
-
+	   if (empty($productCustom->custom_element) or $productCustom->custom_element != $this->_name ||
+		    !isset($product->customProductData[$productCustom->virtuemart_custom_id][$productCustom->virtuemart_customfield_id])) {
+		        return false;
+		}
 		$custom_id=$productCustom->virtuemart_custom_id;
 		$customfield=CustomfieldStockablecustomfields::getInstance($custom_id);
 		$custom_params=$customfield->getCustomfieldParams($custom_id);
