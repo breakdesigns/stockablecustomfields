@@ -10,8 +10,11 @@ if (!defined('_JEXEC')) die;
 jimport('joomla.html.html');
 jimport('joomla.access.access');
 jimport('joomla.form.formfield');
-JHtml::_('behavior.framework', true);
-JHtml::_('behavior.modal');
+
+if(JFactory::getApplication()->isAdmin()) {
+    JHtml::_('behavior.framework', true);
+    JHtml::_('behavior.modal');
+}
 
 require_once __DIR__.DIRECTORY_SEPARATOR.'bootstrap.php';
 
@@ -520,17 +523,17 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 			    }
 			}
 
-			//we have child product. Let's give it custom fields or update the existings
-			if(!empty($derived_product_id)){
-			    if($is_new){
+                // we have child product. Let's give it custom fields or update the existings
+            if (! empty($derived_product_id)) {
+                if ($is_new) {
 
-			        //update the customfield params of the master product. Set the child id as param
-			        $upated=CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id,'customfield_params',$value='custom_id=""|child_product_id="'.$derived_product_id.'"|');
-			        vmdebug('Stockables - Master Product\'s custom field\'s '.$virtuemart_customfield_id.'  params update status:',$upated);
-			    }
+                    // update the customfield params of the master product. Set the child id as param
+                    $upated = CustomfieldStockablecustomfields::updateCustomfield($virtuemart_customfield_id, 'customfield_params', $value = 'custom_id=""|child_product_id="' . $derived_product_id . '"|');
+                    vmdebug('Stockables - Master Product\'s custom field\'s ' . $virtuemart_customfield_id . '  params update status:', $upated);
+                }
 
 				//store the custom fields to the child product
-				$result=CustomfieldStockablecustomfields::storeCustomFields($derived_product_id,$plugin_param['stockablecustomfields']);
+				$result=CustomfieldStockablecustomfields::storeCustomFields($derived_product_id, $plugin_param['stockablecustomfields']);
 
 				if($result){
 
