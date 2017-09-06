@@ -1,5 +1,4 @@
 <?php
-use Joomla\Utilities\ArrayHelper;
 /**
  * @package		stockablecustomfields
  * @copyright	Copyright (C)2014-2017 breakdesigns.net . All rights reserved.
@@ -7,6 +6,7 @@ use Joomla\Utilities\ArrayHelper;
  */
 
  if (!defined('_JEXEC')) die;
+ use Joomla\Utilities\ArrayHelper;
 
 /**
  *
@@ -69,7 +69,7 @@ Class CustomfieldStockablecustomfields
 	 * @return	string
 	 * @since	1.0
 	 */
-	static function getCustomTypeName ($key_type) 
+	static function getCustomTypeName ($key_type)
 	{
 		$types=array(
 			'S' => 'COM_VIRTUEMART_CUSTOM_STRING',
@@ -149,7 +149,7 @@ Class CustomfieldStockablecustomfields
 	 * @return	mixed	 mixed A database cursor resource on success, boolean false on failure.
 	 * @since	1.0
 	 */
-	public static function updateCustomfield($customfield_id,$field='customfield_params',$value='')
+	public static function updateCustomfield($customfield_id, $field='customfield_params', $value='')
 	{
 		if (empty($customfield_id) || empty($field) || empty($value)) return false;
 		$db=JFactory::getDbo();
@@ -185,7 +185,7 @@ Class CustomfieldStockablecustomfields
 		$q=$db->getQuery(true);
 		$q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
 		if(!empty($product_id)){
-			if(is_array($product_id)) {		
+			if(is_array($product_id)) {
 				JArrayHelper::toInteger($product_id);
 				$q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
 			}
@@ -198,7 +198,7 @@ Class CustomfieldStockablecustomfields
 			}
 			else $q->where('pc.virtuemart_custom_id='.(int)$custom_id);
 		}
-		
+
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
 		if(is_array($product_id))$q->order('FIELD(pc.virtuemart_product_id, '.implode(',', $product_id).'),pc.ordering');
 		else $q->order('pc.ordering ASC');
@@ -226,61 +226,69 @@ Class CustomfieldStockablecustomfields
 	 * @since	1.0
 	 * @author	Sakis Terz
 	 */
-	public static function storeCustomFields($product_id,$customsfields)
-	{
-		$log=array();
-		$result=false;
-		if(!empty($customsfields)){
-			$customfieldModel=VmModel::getModel('Customfields');
-			$positive_storage=0;
-			foreach ($customsfields as $custom_id=>$customf){
-				$custom=self::getCustom($custom_id);
-				$data=array();
-				$data['virtuemart_product_id']=$product_id;
-				$data['virtuemart_custom_id']=$custom_id;
-				if(!empty($customf['value']))$data['customfield_value']=$customf['value'];				
+	public static function storeCustomFields($product_id, $customsfields)
+    {
+        $log = array();
+        $result = false;
+        if (! empty($customsfields)) {
+            $customfieldModel = VmModel::getModel('Customfields');
+            $positive_storage = 0;
+            foreach ($customsfields as $custom_id => $customf) {
+                $custom = self::getCustom($custom_id);
+                $data = array();
+                $data['virtuemart_product_id'] = $product_id;
+                $data['virtuemart_custom_id'] = $custom_id;
+                if (! empty($customf['value']))
+                    $data['customfield_value'] = $customf['value'];
 
-				//get the existing customfields for that product with that custom_id
-				$customfieldz=self::getCustomfields($product_id,$custom_id);
+                // get the existing customfields for that product with that custom_id
+                $customfieldz = self::getCustomfields($product_id, $custom_id);
 
-				//exists a record for that product
-				if(!empty($customfieldz[0])){
-					$data['virtuemart_customfield_id']=$customfieldz[0]->virtuemart_customfield_id;
-						
-					if($custom->field_type!='E'){
-						//same customfield same value. Do nothing
-						if($customfieldz[0]->customfield_value==$customf['value'])$result=true;
-						//same customfield different value. Update
-						else $result=self::updateCustomfield($customfieldz[0]->virtuemart_customfield_id,'customfield_value',$customf['value']);
-					}
-				}
-				//no customfield record. Insert
-				else {
-					$tableCustomfields = $customfieldModel->getTable('product_customfields');
-					$tableCustomfields->setPrimaryKey('virtuemart_product_id');
-					$tableCustomfields->_xParams = 'customfield_params';
-					$result=$tableCustomfields->bindChecknStore($data);
-				}
-				
-				if($custom->field_type=='E'){
-					JPluginHelper::importPlugin ('vmcustom');
-					$dispatcher = JDispatcher::getInstance ();
-					$result= $dispatcher->trigger ('plgVmOnStockableSave', array($data,$customf));
-				}
+                // exists a record for that product
+                if (! empty($customfieldz[0])) {
+                    $data['virtuemart_customfield_id'] = $customfieldz[0]->virtuemart_customfield_id;
 
-				if(!$result){
-					vmdebug('Stockables - Custom id:'.$custom_id.':'.$customf['value'].' Not Saved to Product:',$product_id);
-					//return false;
-				}else {
-					$positive_storage++;
-					vmdebug('Stockables - Custom Value:'.$custom_id.':'.$customf['value'].' Saved to Product:'.$product_id);
-				}
-				if(!empty($tableCustomfields))unset($tableCustomfields);
-			}
-			if($positive_storage==count($customsfields)-1)$result=true;
-		}
-		return $result;
-	}
+                    if ($custom->field_type != 'E') {
+                        // same customfield same value. Do nothing
+                        if ($customfieldz[0]->customfield_value == $customf['value']) {
+                            $result = true;
+                        }                         // same customfield different value. Update
+                        else {
+                            $result = self::updateCustomfield($customfieldz[0]->virtuemart_customfield_id, 'customfield_value', $customf['value']);
+                        }
+                    }
+                }                 // no customfield record. Insert
+                else {
+                    $tableCustomfields = $customfieldModel->getTable('product_customfields');
+                    $tableCustomfields->setPrimaryKey('virtuemart_product_id');
+                    $tableCustomfields->_xParams = 'customfield_params';
+                    $result = $tableCustomfields->bindChecknStore($data);
+                }
+
+                if ($custom->field_type == 'E') {
+                    JPluginHelper::importPlugin('vmcustom');
+                    $dispatcher = JDispatcher::getInstance();
+                    $result = $dispatcher->trigger('plgVmOnStockableSave', array(
+                        $data,
+                        $customf
+                    ));
+                }
+
+                if (! $result) {
+                    vmdebug('Stockables - Custom id:' . $custom_id . ':' . $customf['value'] . ' Not Saved to Product:', $product_id);
+                    // return false;
+                } else {
+                    $positive_storage ++;
+                    vmdebug('Stockables - Custom Value:' . $custom_id . ':' . $customf['value'] . ' Saved to Product:' . $product_id);
+                }
+                if (! empty($tableCustomfields))
+                    unset($tableCustomfields);
+            }
+            if ($positive_storage == count($customsfields) - 1)
+                $result = true;
+        }
+        return $result;
+    }
 
 	/**
 	 * Check and return orderable products (have stock etc based on the VM config)
@@ -292,7 +300,7 @@ Class CustomfieldStockablecustomfields
 	 */
 	public static function getOrderableProducts($product_ids, $custom_params, $exclude=false)
 	{
-		ArrayHelper::toInteger($product_ids);
+		$product_ids = ArrayHelper::toInteger($product_ids);
 		$db=JFactory::getDbo();
 		$q=$db->getQuery(true);
 		$q->select('p.virtuemart_product_id, p.`product_in_stock` - p.`product_ordered` AS stock')->from('#__virtuemart_products AS p');
@@ -300,7 +308,7 @@ Class CustomfieldStockablecustomfields
 
 		//stock management when it's not catalogue
 		if (!VmConfig::get('use_as_catalog',0) && (VmConfig::get('stockhandle','none')=='disableit' || $custom_params['outofstockcombinations']=='hidden')) {
-		    
+
 		    /*
 		     * we may want to exclude a product no matter it has stock
 		     * this used mainly when the parent is stockable. We want to display it's combination
@@ -309,7 +317,7 @@ Class CustomfieldStockablecustomfields
 			else $q->where('p.`product_in_stock` - p.`product_ordered` >0');
 		}
 		$q->where('p.virtuemart_product_id IN('.implode(',', $product_ids).')');
-		
+
 		//shopper groups
 		$q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
 		$usermodel = VmModel::getModel ('user');
@@ -320,7 +328,7 @@ Class CustomfieldStockablecustomfields
 			$q->where('(ps.`virtuemart_shoppergroup_id` IS NULL OR ps.`virtuemart_shoppergroup_id` IN('.implode(',', $virtuemart_shoppergroup_ids).'))');
 		}
 		else $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
-		
+
 		$quoted_product_ids=array_map(function($n){$db=JFactory::getDbo(); return $db->quote($n);}, $product_ids);
 		$q->order('FIELD(p.virtuemart_product_id, '.implode(',', $quoted_product_ids).')');
 		$db->setQuery($q);
@@ -333,8 +341,8 @@ Class CustomfieldStockablecustomfields
 		{
 			JError::raiseWarning(500, $e->getMessage());
 			$result=false;
-		}		
-		
+		}
+
 		return $result;
 	}
 
