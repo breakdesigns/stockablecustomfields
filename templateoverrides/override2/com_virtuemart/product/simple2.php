@@ -12,19 +12,13 @@ defined("_JEXEC")or die();
 if (JFactory::getApplication()->isSite()) {
 	JSession::checkToken('get') or die(JText::_('JINVALID_TOKEN'));
 }
+$document = JFactory::getDocument();
 
-$document=JFactory::getDocument();
-if(version_compare(JVERSION,'3','lt')){
-	JHtml::_('behavior.tooltip');
-	$document->addStyleSheet(JURI::root().'components/com_virtuemart/assets/css/chosen.css');
-	$document->addScript(JURI::root().'components/com_virtuemart/assets/js/chosen.jquery.min.js');
-	vmJsApi::chosenDropDowns();
-}else{//joomla 3
-	JHtml::_('bootstrap.tooltip');
-	JHtml::_('behavior.framework', true);
-	JHTML::_('behavior.modal');
-	JHtml::_('formbehavior.chosen', 'select');
-}
+JHtml::_('bootstrap.tooltip');
+JHtml::_('behavior.framework', true);
+JHTML::_('behavior.modal');
+JHtml::_('formbehavior.chosen', 'select');
+
 
 $app = JFactory::getApplication();
 $listOrder='virtuemart_product_id';
@@ -43,16 +37,16 @@ $derived_product_ids=array();
 if($function=='jSelectProduct'){
     $document->addStyleSheet( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/css/products.css');
     $document->addScript( JURI::root(true).'/plugins/vmcustom/stockablecustomfields/assets/js/products.js');
-    
+
 	$lang = JFactory::getLanguage();
 	$lang->load('plg_vmcustom_stockablecustomfields');
-	
+
 	if(!empty($product_id) && !empty($custom_id)){
 	    require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
 	    $customfield=CustomfieldStockablecustomfields::getInstance($custom_id);
 	    $parent_customfields=CustomfieldStockablecustomfields::getCustomfields($product_id,$custom_id);
 	    //get the already derived products. These should not be selectable
-	   
+
 	    foreach ($parent_customfields as $pc){
 	        $customfield_params=explode('|', $pc->customfield_params);
 	        foreach ($customfield_params as $cparam){
@@ -61,8 +55,8 @@ if($function=='jSelectProduct'){
 	        }
 	    }
 	}
-	
-	
+
+
 }
 
 ?>
@@ -89,7 +83,8 @@ if($function=='jSelectProduct'){
 
 
 			<div class="filter-select fltrt btn-group pull-right">
-				<select id="virtuemart_category_id" class="vm-chzn-select" name="virtuemart_category_id"
+				<select id="virtuemart_category_id" class="vm-chzn-select"
+					name="virtuemart_category_id"
 					onchange="this.form.submit(); return false;">
 					<option value="">
 					<?php echo JText::sprintf( 'COM_VIRTUEMART_SELECT' ,  JText::_('COM_VIRTUEMART_CATEGORY')) ; ?>
@@ -111,7 +106,7 @@ if($function=='jSelectProduct'){
 					<th width="20%"><?php echo JHtml::_('grid.sort',  'COM_VIRTUEMART_PRODUCT_CHILDREN_OF', 'product_parent_id', $listDirn, $listOrder); ?>
 					</th>
 					<th width="3%"><?php echo JText::_('COM_VIRTUEMART_PRODUCT_PARENT_LIST_CHILDREN'); ?>
-					</th>					
+					</th>
 					<th width="12%"><?php echo JHtml::_('grid.sort',  'COM_VIRTUEMART_PRODUCT_SKU', 'product_sku', $listDirn, $listOrder); ?>
 					</th>
 					<th width="8%"><?php echo JHtml::_('grid.sort',  'COM_VIRTUEMART_PRODUCT_PRICE_TITLE', 'product_price', $listDirn, $listOrder); ?>
@@ -136,6 +131,7 @@ if($function=='jSelectProduct'){
 			foreach ($this->productlist as $key => $product) {
 				if(isset($product->product_price_display)) {
 					$price=$product->product_price_display;
+					$price = floatval($price);
 				} elseif(!empty($product->prices)) {
 					$price=JText::_('COM_VIRTUEMART_MULTIPLE_PRICES');
 				} else {
@@ -144,32 +140,33 @@ if($function=='jSelectProduct'){
 				//get the child products link output
 				ob_start();
 				VirtuemartViewProduct::displayLinkToChildList($product->virtuemart_product_id , $product->product_name);
-				$child_prod = ob_get_contents();				
+				$child_prod = ob_get_contents();
 				ob_end_clean();
 				$has_children_msg=!empty($child_prod)?JText::_('JYES'):	JText::_('JNO');
 				?>
-				<tr class="row<?php echo $key % 2; ?>" id="element_<?php echo $product->virtuemart_product_id?>">
-					<td><?php 
+				<tr class="row<?php echo $key % 2; ?>"
+					id="element_<?php echo $product->virtuemart_product_id?>">
+					<td><?php
 					//enable selection only when the function jSelectProduct is passed and the product is either parent or child of the current parent
-					if($function=='jSelectProduct' && $product->virtuemart_product_id!=$product_id && 
-					    !in_array($product->virtuemart_product_id, $derived_product_ids) && 
+					if($function=='jSelectProduct' && $product->virtuemart_product_id!=$product_id &&
+					    !in_array($product->virtuemart_product_id, $derived_product_ids) &&
 					    empty($child_prod) &&
 					    (empty($product->product_parent_id) || $product->product_parent_id==$product_id)):?>
-					    
+
 						<button type="button" class="breakdesigns_btn productAddBtn"
 							title="<?php echo JText::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_LABEL')?>"
 							onclick="addToList('<?php echo $product->product_name;?>', '<?php echo $product->product_sku;?>', '<?php echo $product->product_in_stock?>','<?php echo $price;?>','<?php echo $product->virtuemart_product_id;?>');">
 							<i class="icon-plus"></i>
 						</button>
-						<?php 
+						<?php
 						else:?>
 						<span><i class="icon-lock"></i></span>
-						<?php 
+						<?php
 						endif;
 						?>
 					</td>
 					<td align="left"><?php echo $product->product_name;?></td>
-					<td align="left"><?php 
+					<td align="left"><?php
 					if ($product->product_parent_id  ) {
 						VirtuemartViewProduct::displayLinkToParent($product->product_parent_id);
 					}?>
@@ -180,7 +177,7 @@ if($function=='jSelectProduct'){
 					echo $price;
 					?>
 					</td>
-					<td align="left"><?php 
+					<td align="left"><?php
 					echo $product->categoriesList;?>
 					</td>
 					<td align="left"><?php echo $product->mf_name;?></td>
@@ -193,18 +190,18 @@ if($function=='jSelectProduct'){
 		</table>
 	</div>
 
-	<input type="hidden" name="filter_order" value="<?php echo $listOrder?>" /> 
-	<input type="hidden" name="filter_order_Dir" value="<?php echo $listDirn?>" /> 
-	<input type="hidden" name="task" value="" /> 
-	<input type="hidden" name="function" value="<?php echo $function;?>" />
-	<input type="hidden" name="product_id" value="<?php echo $product_id;?>" />
-	<input type="hidden" name="custom_id" value="<?php echo $custom_id;?>" />
-	<input type="hidden" name="row" value="<?php echo $row;?>" />	
-	<input type="hidden" name="option" value="com_virtuemart" /> 
-	<input type="hidden" name="boxchecked" value="0" /> 
-	<input type="hidden" name="controller" value="product" /> 
-	<input type="hidden" name="layout" value="simple2" /> 
-	<input type="hidden" name="tmpl" value="component" /> 
-	<input type="hidden" name="view" value="product" />
+	<input type="hidden" name="filter_order"
+		value="<?php echo $listOrder?>" /> <input type="hidden"
+		name="filter_order_Dir" value="<?php echo $listDirn?>" /> <input
+		type="hidden" name="task" value="" /> <input type="hidden"
+		name="function" value="<?php echo $function;?>" /> <input
+		type="hidden" name="product_id" value="<?php echo $product_id;?>" /> <input
+		type="hidden" name="custom_id" value="<?php echo $custom_id;?>" /> <input
+		type="hidden" name="row" value="<?php echo $row;?>" /> <input
+		type="hidden" name="option" value="com_virtuemart" /> <input
+		type="hidden" name="boxchecked" value="0" /> <input type="hidden"
+		name="controller" value="product" /> <input type="hidden"
+		name="layout" value="simple2" /> <input type="hidden" name="tmpl"
+		value="component" /> <input type="hidden" name="view" value="product" />
 	<?php echo JHtml::_('form.token'); ?>
 </form>
