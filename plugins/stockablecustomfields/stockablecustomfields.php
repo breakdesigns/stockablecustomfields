@@ -838,11 +838,14 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		$input=JFactory::getApplication()->input;
 		$html='';
 		if($input->get('option')!='com_virtuemart' && $input->get('option')!='com_customfilters' && $input->get('option')!='com_productbuilder')return false;
+		$product->orderable=true;
 
-		//can be added to cart only in product details
+		//can be added to cart only in product details and category
 		if(
-		    ($input->get('option')=='com_virtuemart' && $input->get('view')!='productdetails') ||
-		    ($input->get('option')=='com_customfilters' && $input->get('view')=='products'))$product->orderable=false;
+		    ($input->get('option')=='com_virtuemart' && ($input->get('view')=='productdetails' || $input->get('view')=='category')) ||
+		    ($input->get('option')=='com_customfilters' && $input->get('view')=='products')) {
+		        $product->orderable=true;
+		}
 
         // we want this function to run only once. Not for every customfield record of this type
         static $printed = false;
@@ -984,23 +987,36 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		return false;
 	}
 
-	/**
-	 * Generate urls for a set of products
-	 *
-	 * @param array $product_ids
-	 * @param int $category_id
-	 *
-	 * @return	array
-	 * @since	1.0
-	 */
-	public function getProductUrls($product_ids, $category_id)
-	{
-		$product_urls=array();
-		foreach ($product_ids as $pid){
-			$product_urls[$pid]=JRoute::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id='.(int)$category_id.'&virtuemart_product_id='.(int)$pid);
-		}
-		return $product_urls;
-	}
+    /**
+     * Generate urls for a set of products
+     *
+     * @param array $product_ids
+     * @param int $category_id
+     *
+     * @return array
+     * @since 1.0
+     */
+    public function getProductUrls($product_ids, $category_id)
+    {
+        $product_urls = array();
+        $input = JFactory::getApplication()->input;
+        foreach ($product_ids as $pid) {
+            if ($input->get('view', '') == 'productdetails') {
+                $product_urls[$pid] = JRoute::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . (int) $category_id . '&virtuemart_product_id=' . (int) $pid);
+            }
+
+            else {
+                $route = JRoute::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . (int) $category_id);
+                if (strpos($route, '?') === false) {
+                    $route .= '?virtuemart_product_id=' . (int) $pid;
+                } else {
+                    $route .= '&virtuemart_product_id=' . (int) $pid;
+                }
+                $product_urls[$pid] = $route;
+            }
+        }
+        return $product_urls;
+    }
 
 	/**
 	 * function triggered on display cart - VM3
@@ -1043,7 +1059,6 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 				}
 			}
 		}
-
 		return true;
 	}
 

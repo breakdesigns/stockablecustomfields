@@ -364,14 +364,18 @@ if (typeof Stockablecustomfields === "undefined") {
 				if(jQuery(this).is('select'))jQuery(this).find('option').removeAttr('disabled');
 			})
 		};
-		Stockable.prototype.loadProductPage=function(matchedCombinations){					
-			var product_id=matchedCombinations[0].product_id;
+		Stockable.prototype.loadProductPage=function(matchedCombinations){
+			var product_id=matchedCombinations[0].product_id; console.log(product_id);
 			//the product is already loaded
 			if(this.current_product_id==product_id)return;
 
 			var url=this.urls[product_id];
 			if (typeof Virtuemart !== "undefined"){
-				if (typeof Virtuemart.updateContent == 'function') { 							
+				if (typeof Virtuemart.updateContent == 'function') {
+					if(typeof Virtuemart.containerSelector == 'undefined'){
+						Virtuemart.containerSelector = '.product-container';
+					}
+					Virtuemart.container = jQuery(this.stockArea).closest(Virtuemart.containerSelector);
 					Virtuemart.updateContent(url,Stockablecustomfields.setEvents); 							
 				}						
 			}
