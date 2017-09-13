@@ -238,9 +238,9 @@ Class CustomfieldStockablecustomfields
                 $data = array();
                 $data['virtuemart_product_id'] = $product_id;
                 $data['virtuemart_custom_id'] = $custom_id;
-                if (! empty($customf['value']))
+                if (! empty($customf['value'])) {
                     $data['customfield_value'] = $customf['value'];
-
+                }
                 // get the existing customfields for that product with that custom_id
                 $customfieldz = self::getCustomfields($product_id, $custom_id);
 
@@ -281,11 +281,13 @@ Class CustomfieldStockablecustomfields
                     $positive_storage ++;
                     vmdebug('Stockables - Custom Value:' . $custom_id . ':' . $customf['value'] . ' Saved to Product:' . $product_id);
                 }
-                if (! empty($tableCustomfields))
+                if (! empty($tableCustomfields)) {
                     unset($tableCustomfields);
+                }
             }
-            if ($positive_storage == count($customsfields) - 1)
+            if ($positive_storage == count($customsfields) - 1) {
                 $result = true;
+            }
         }
         return $result;
     }
