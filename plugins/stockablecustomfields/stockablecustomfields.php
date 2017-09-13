@@ -86,7 +86,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 	 * @return	boolean
 	 * @since	1.0
 	 */
-	public function plgVmOnProductEdit($field, $product_id, &$row,&$retValue)
+	public function plgVmOnProductEdit($field, $product_id, &$row, &$retValue)
 	{
 		if ($field->custom_element != $this->_name) return '';
 		$derived_product=new stdClass();
@@ -456,7 +456,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 	 *
 	 * @since	1.0
 	 */
-	public function plgVmOnStoreProduct($data,$plugin_param)
+	public function plgVmOnStoreProduct($data, $plugin_param)
 	{
 		$plugin_name=key($plugin_param);
 		if($plugin_name!= $this->_name)return;
@@ -493,7 +493,6 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 					$virtuemart_customfield_id=$virtuemart_customfield_ids[$index]->virtuemart_customfield_id;
 				}
 			}
-
 
 			$derived_product_id=$plugin_param['child_product_id'];
 
@@ -535,8 +534,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 				//store the custom fields to the child product
 				$result=CustomfieldStockablecustomfields::storeCustomFields($derived_product_id, $plugin_param['stockablecustomfields']);
 
-				if($result){
-
+				if($result) {
 				    //check if an image was uploaded
     				$input=JFactory::getApplication()->input;
     				$files=$input->files->get('derived_product_img');
@@ -691,8 +689,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                 $resized_img_destination_name = $thumb_destination;
 
                 // create the thumb image
-                if (! class_exists('Img2Thumb'))
+                if (! class_exists('Img2Thumb')) {
                     require (VMPATH_ADMIN . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'img2thumb.php');
+                }
 
                 $created_thumb_image = new Img2Thumb($img_destination_name, (int) $thumb_width, (int) $thumb_height, $resized_img_destination_name, $maxsize = false, $bgred = 255, $bggreen = 255, $bgblue = 255);
 
@@ -702,7 +701,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
                     // set media vars
                     $data = new stdClass();
-                    $data->virtuemart_media_id = 0;
+                    //$data->virtuemart_media_id = 0;
                     $data->virtuemart_vendor_id = 0;
                     $data->file_title = $name;
                     $data->file_description = '';
@@ -721,14 +720,11 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                     $data->file_lang = '';
                     $data->created_on=$now->toSql();
 
-                    if (!class_exists('VmMediaHandler')) require(VMPATH_ADMIN.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'mediahandler.php');
-                    $media = VmMediaHandler::createMedia($data, $file_type);
-
                     JTable::addIncludePath(JPATH_ADMINISTRATOR.DIRECTORY_SEPARATOR.'components'.DIRECTORY_SEPARATOR.'com_virtuemart'.DIRECTORY_SEPARATOR.'tables');
                     //create the media db record
                     $table = JTable::getInstance('medias', 'Table');
                     //$table->bind($media);
-                    $table->bindChecknStore($media);
+                    $table->bindChecknStore($data);
                     $media_id=$table->virtuemart_media_id;
                     vmdebug('media id:',$media_id);
 
@@ -745,6 +741,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                            $result = JFactory::getDbo()->insertObject('#__virtuemart_product_medias', $row);
                         }
                         catch(RuntimeException $e){
+                            vmError($e->getMessage());
                             JError::raiseWarning(500, $e->getMessage());
 				            $result=false;
                         }
@@ -838,27 +835,19 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		$input=JFactory::getApplication()->input;
 		$html='';
 		if($input->get('option')!='com_virtuemart' && $input->get('option')!='com_customfilters' && $input->get('option')!='com_productbuilder')return false;
-		$product->orderable=true;
+		$product->orderable=false;
 
-		//can be added to cart only in product details and category
-		if(
-		    ($input->get('option')=='com_virtuemart' && ($input->get('view')=='productdetails' || $input->get('view')=='category')) ||
-		    ($input->get('option')=='com_customfilters' && $input->get('view')=='products')) {
-		        $product->orderable=true;
-		}
+            // can be added to cart only in product details and category
+        if (
+            ($input->get('option') == 'com_virtuemart' && ($input->get('view') == 'productdetails' || $input->get('view') == 'category')) ||
+            ($input->get('option') == 'com_customfilters' && $input->get('view') == 'products')) {
+                $product->orderable=true;
+        }
 
         // we want this function to run only once. Not for every customfield record of this type
         static $printed = false;
         static $printed_inbundle = false;
         static $pb_group_id = '';
-
-        /*
-         * this can cause problem when we call that function in a group with a default product.
-         * VM will call that function 1st for the generation of the product, setting the printed var to true
-         */
-        if ($printed == $product->virtuemart_product_id && $input->get('option') != 'com_productbuilder') return;
-        $printed = $product->virtuemart_product_id;
-        $ischild = false;
 
 		$stockable_customfields=array();
 		$custom_id=$group->virtuemart_custom_id;
@@ -873,15 +862,24 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		$custom_ids=!empty($custom_params['custom_id'])?$custom_params['custom_id']:array();
 		$layout='default';
 
-		//this is the parent
-		if($product->product_parent_id==0){
-			$product_parent_id=$product->virtuemart_product_id;
-			if(empty($custom_params['parentOrderable']))$product->orderable=false;
-		}
-		else {
-		  $ischild=true;
-          $product_parent_id=$product->product_parent_id;
-		}
+        // this is the parent
+        if ($product->product_parent_id == 0) {
+            $product_parent_id = $product->virtuemart_product_id;
+            if (empty($custom_params['parentOrderable'])) {
+                $product->orderable = false;
+            }
+        } else {
+            $ischild = true;
+            $product_parent_id = $product->product_parent_id;
+        }
+
+        /*
+         * this can cause problem when we call that function in a group with a default product.
+         * VM will call that function 1st for the generation of the product, setting the printed var to true
+         */
+        if ($printed == $product->virtuemart_product_id && $input->get('option') != 'com_productbuilder') return;
+        $printed = $product->virtuemart_product_id;
+        $ischild = false;
 
 		/*
 		 * we need to get the stockable cuctomfields of the parent, to load the child product ids from the params of it's stockable custom fields
@@ -902,7 +900,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		$viewdata->isderived=false;
 		if(!empty($derived_product_ids)){
 		    $parent_derived=false;
-		    if(in_array($product->virtuemart_product_id, $derived_product_ids))$parent_derived=$product->virtuemart_product_id;
+		    if(in_array($product->virtuemart_product_id, $derived_product_ids)) {
+		        $parent_derived=$product->virtuemart_product_id;
+		    }
 		    /*
 		     * exclude the parent derived from the stock control
 		     * when we visit the parent product we want that combination there.
@@ -913,7 +913,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 		}
 
 		if(!empty($custom_ids) && !empty($derived_product_ids)){
-			if(in_array($product->virtuemart_product_id, $derived_product_ids))$viewdata->isderived=true;
+			if(in_array($product->virtuemart_product_id, $derived_product_ids)) {
+			    $viewdata->isderived=true;
+			}
 
 			//wraps all the html generated
 			$html.='<div class="stockablecustomfields_fields_wrapper" id="'.rand(0, 100).'">';
@@ -953,7 +955,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 						$html.=$output;
 					}
 				}
-				if(!empty($stockable_customfields_tmp))$stockable_customfields=array_merge($stockable_customfields, $stockable_customfields_tmp);
+				if(!empty($stockable_customfields_tmp)) {
+				    $stockable_customfields=array_merge($stockable_customfields, $stockable_customfields_tmp);
+				}
 			}
 			$html.='</div>';
 
