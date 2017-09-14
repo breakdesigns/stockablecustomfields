@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<extension version="3.4.0" type="plugin" group="vmcustom" method="upgrade">
+<extension version="3.5.0" type="plugin" group="vmcustom" method="upgrade">
 	<name>Stockable Customfields</name>
-	<creationDate>2016-09-07</creationDate>
+	<creationDate>2016-09-14</creationDate>
 	<author>breadkesigns</author>
 	<authorEmail>info@breakdesigns.net</authorEmail>
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
 	<copyright>Copyright(c) 2015-2017 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
 	<version>1.5.0</version>
-	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.5.0 | 7 September 2017)</i></h3>
+	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.5.0 | 14 September 2017)</i></h3>
     <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_150.png"/></span>
     <p style="margin-top:5px; font-size:12px; font-weight:0;">Create stockable variations using custom fields</p>
     <p><a href="https://breakdesigns.net/extensions/joomla/stockable-custom-fields/documentation" target="_blank">Please check our Manual to see how to proceed further</a>
@@ -63,12 +63,10 @@
 		</language>
 		<language tag="nl-NL">nl-NL/nl-NL.plg_vmcustom_stockablecustomfields.ini
 		</language>
-		<language tag="ru-RU">ru-RU/ru-RU.plg_vmcustom_stockablecustomfields.ini
-		</language>
 		<language tag="sk-SK">sk-SK/sk-SK.plg_vmcustom_stockablecustomfields.ini
 		</language>
 	</languages>
-	<config>
+	<vmconfig>
 		<fields name="params">
 			<fieldset name="basic"
 				addfieldpath="/plugins/vmcustom/stockablecustomfields/fields">
@@ -96,7 +94,7 @@
 
 			</fieldset>
 		</fields>
-	</config>
+	</vmconfig>
 
 	<plugins>
 		<plugin plugin="stockablecustomfields" group="vmcustom" />
