@@ -925,6 +925,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 				$viewdata->custom=$custom;
 				$custom->pb_group_id=$group->pb_group_id;
 
+				//wrap each custom field
+                $html.= '<div class="customfield_wrapper" id="customfield_wrapper_'. $cust_id .'">';
 				if($custom->field_type!='E'){
 					//get it from the built in function
 					$stockable_customfields_tmp=CustomfieldStockablecustomfields::getCustomfields($derived_product_ids,$cust_id);
@@ -958,6 +960,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 				if(!empty($stockable_customfields_tmp)) {
 				    $stockable_customfields=array_merge($stockable_customfields, $stockable_customfields_tmp);
 				}
+                $html.='</div>';
 			}
 			$html.='</div>';
 
