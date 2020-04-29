@@ -25,6 +25,12 @@ Class CustomfieldStockablecustomfields
 	protected static $_customparams;
 
     /**
+     * @var string
+     * @since 1.5.1
+     */
+	protected static $defaultLang;
+
+    /**
      * Constructor
      *
      * @param int $_custom_id
@@ -319,6 +325,13 @@ Class CustomfieldStockablecustomfields
 	public static function getOrderableProducts($product_ids, $custom_params, $exclude=false)
 	{
         $product_ids = ArrayHelper::toInteger($product_ids);
+
+        // get the current language to get the product name
+        $shopLanguage = self::getDefaultLangTag();
+        $vmLanguages = \VmConfig::get('active_languages', array(
+            $shopLanguage
+        ));
+
         $db = Factory::getDbo();
         $q = $db->getQuery(true);
 
@@ -340,6 +353,13 @@ Class CustomfieldStockablecustomfields
             }
         }
         $q->where('p.virtuemart_product_id IN(' . implode(',', $product_ids) . ')');
+
+        // Get the name only if the current language is valid
+        if(in_array($shopLanguage, $vmLanguages)) {
+            $db_language_suffix = strtolower(str_replace('-', '_', $shopLanguage));
+            $q->leftJoin('#__virtuemart_products_' . $db_language_suffix . ' AS l ON p.virtuemart_product_id=l.virtuemart_product_id');
+            $q->select('l.product_name AS product_name');
+        }
 
         //shopper groups
         $q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
@@ -412,7 +432,6 @@ Class CustomfieldStockablecustomfields
         $products = array();
         $products_final = array();
         $custom_values = array();
-        $productsModel = \VmModel::getModel('Product');
 
         foreach ($customfields as $cf) {
             /**
@@ -439,12 +458,30 @@ Class CustomfieldStockablecustomfields
         }
         //change the form to be easier to handle as json object
         foreach ($products as $pid => $p_array) {
-            $products_final[] = array('product_id' => $pid, 'customfield_ids' => $p_array, 'stock' => $product_array[$pid]['stock']);
+            $product_name = isset($product_array[$pid]['product_name']) ? $product_array[$pid]['product_name'] : '';
+            $products_final[] = array('product_id' => $pid, 'customfield_ids' => $p_array, 'stock' => $product_array[$pid]['stock'], 'product_name' => $product_name);
         }
 
         $return = new \stdClass();
         $return->combinations = $products_final;
         return $return;
+    }
+
+    /**
+     *
+     * @param string $lang
+     * @return Language
+     */
+    public static function getDefaultLangTag($lang = null)
+    {
+        if (self::$defaultLang == null) {
+            if ($lang == null) {
+                self::$defaultLang = isset(\VmConfig::$jDefLangTag) ? \VmConfig::$jDefLangTag : (Factory::getLanguage()->getDefault());
+            } else {
+                self::$defaultLang = $lang;
+            }
+        }
+        return self::$defaultLang;
     }
 }
 
