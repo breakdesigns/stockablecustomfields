@@ -16,25 +16,9 @@
 
 	<scriptfile>script.php</scriptfile>
 
-	<install>
-		<sql>
-		</sql>
-	</install>
-
-	<uninstall> <!-- Runs on uninstall -->
-		<sql>
-		</sql>
-	</uninstall>
-
-	<update> <!-- Runs on update; New in 1.6 -->
-		<schemas>
-
-		</schemas>
-	</update>
-
 	<!-- Update servers -->
 	<updateservers>
-		<server type="extension" priority="1" name="Stockable Customfields">http://cdn.breakdesigns.net/release/stockablecustomfields/update.xml
+		<server type="extension" priority="1" name="Stockable Customfields">https://breakdesigns.net/index.php?option=com_ars&amp;view=update&amp;task=stream&amp;format=xml&amp;id=4
 		</server>
 	</updateservers>
 
@@ -81,7 +65,7 @@
 					<option value="0">JNO</option>
 				</field>
 
-				<field name="outofstockcombinations" type="radio" class="btn-group"
+				<field name="outofstockcombinations" type="radio"
 					label="PLG_STOCKABLECUSTOMFIELDS_OUT_OF_STOCK_DISPLAY_LABEL"
 					description="PLG_STOCKABLECUSTOMFIELDS_OUT_OF_STOCK_DISPLAY_DESC"
 					default="enabled">
