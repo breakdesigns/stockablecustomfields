@@ -967,7 +967,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
             $customfield_params = explode('|', $pc->customfield_params);
             foreach ($customfield_params as $cparam) {
                 $item = explode('=', $cparam);
-                if ($item[0] == 'child_product_id') $derived_product_ids[] = json_decode($item[1]);
+                if ($item[0] == 'child_product_id') {
+                    $derived_product_ids[] = json_decode($item[1]);
+                }
             }
         }
 
@@ -1047,16 +1049,22 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
             //print the scripts for the fe
             if (!empty($stockable_customfields)) {
                 $customfield_product_combinations = CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields, $derived_products);
-                $doc = Factory::getDocument();
+                $childproduct_urls = $this->getProductUrls($derived_product_ids, $product->virtuemart_category_id);
+
+                foreach ($customfield_product_combinations->combinations as &$derived_product) {
+                    $derived_product['product_url'] = $childproduct_urls[$derived_product['product_id']];
+                }
+
                 //generate the array based on which, it will load the chilc products getting into account the selected fields
                 $script = 'stockableCustomFieldsCombinations:\'' . json_encode($customfield_product_combinations) . '\',';
-                $childproduct_urls = $this->getProductUrls($derived_product_ids, $product->virtuemart_category_id);
                 $script .= 'stockableCustomFieldsProductUrl:\'' . json_encode($childproduct_urls) . '\',';
                 $script .= 'stockable_out_of_stock_display:\'' . $custom_params['outofstockcombinations'] . '\',';
                 $finalScript = "
 				    if(typeof StockableObjects=='undefined')StockableObjects=new Array();
 				    StockableObjects[" . $product_parent_id . "]={" . $script . "};";
                 $html .= '<script>' . $finalScript . '</script>';
+
+                $doc = Factory::getDocument();
                 $doc->addScript(Uri::root() . 'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 
                 $group->stockableCombinations = $customfield_product_combinations;
