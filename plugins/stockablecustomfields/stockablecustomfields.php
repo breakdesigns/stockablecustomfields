@@ -364,32 +364,43 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
      */
 	public function getDerivedProductFormMarkup($row, $product, $field)
 	{
+	    $loadProductsURL = 'index.php?option=com_virtuemart&view=product&custom_id='.$field->virtuemart_custom_id.'&row='.$row.'&product_id='.$product->virtuemart_product_id.'&layout=simple2&tmpl=component&function=jSelectProduct';
+
 	    $html='
-				    <div id="derived_product_wrapper_'.$row.'">
-    					<div class="btn-toolbar">
-    					   <div class="btn-group">
-    					       <a class="btn btn-success" id="stcoakbles_createnew_'.$row.'" href="#" onclick="return false;"><i class="icon-plus"></i><span>'.Text::_('PLG_STOCKABLECUSTOMFIELDS_CREATE_NEW').'</span></a>
-                               <a class="btn modal" id="stcoakbles_loadproduct_'.$row.'"
-    				            href="index.php?option=com_virtuemart&view=product&custom_id='.$field->virtuemart_custom_id.'&row='.$row.'&product_id='.$product->virtuemart_product_id.'&layout=simple2&tmpl=component&function=jSelectProduct"
-    				                rel="{handler: \'iframe\', size: {x: 850, y: 550}}"
-    			                ><i class="icon-briefcase"></i><span>'.Text::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_EXISTING').'</span></a>
-    					   </div>
-    					</div>';
+                <div id="derived_product_wrapper_'.$row.'">
+                    <div class="btn-toolbar">
+                       <div class="btn-group">
+                           <a class="btn btn-success" id="stcoakbles_createnew_'.$row.'" href="#" onclick="return false;"><i class="icon-plus"></i><span>'.Text::_('PLG_STOCKABLECUSTOMFIELDS_CREATE_NEW').'</span></a>
+                           <a class="btn modal" id="stcoakbles_loadproduct_'.$row.'"
+                            href="'.$loadProductsURL.'"
+                                rel="{handler: \'iframe\', size: {x: 850, y: 550}}"
+                            ><i class="icon-briefcase"></i><span>'.Text::_('PLG_STOCKABLECUSTOMFIELDS_SELECT_EXISTING').'</span></a>
+                       </div>
+                    </div>';
 
 	    $html.='<script type="text/javascript">
-    				    SqueezeBox.initialize({});
-    					SqueezeBox.assign($$(\'a.modal\'), {
+    				    if(typeof SqueezeBox.initialize =="function") {
+    				        SqueezeBox.initialize({});
+    					    SqueezeBox.assign($$(\'a.modal\'), {
     						parse: \'rel\'
-    					});
+    					    });
+    					}
 
-    				    jQuery(\'#stcoakbles_loadproduct_'.$row.'\').on("click",function(){
+    					// Load existing
+    				    jQuery(\'#stcoakbles_loadproduct_'.$row.'\').on("click",function(e){
+    				        e.preventDefault();
+    				        if(typeof SqueezeBox.initialize !="function") {
+    				            alert("You need to save the product with a stockable variation, to use that feature");
+    				            return false;
+    				        }
     			             jQuery(\'#derived_product_new'.$row.'\').hide();
     			             jQuery(\'#derived_product_existing'.$row.'\').show();
     			             jQuery(\'#derived_product_image_loader'.$row.'\').hide();
     			             jQuery(\'#stcoakbles_createnew_'.$row.'\').removeClass("btn-success");
     			             jQuery(this).addClass("btn-success");
     			        });
-
+                        
+                        // Create new
     			        jQuery(\'#stcoakbles_createnew_'.$row.'\').on("click",function(){
     			             jQuery(\'#derived_product_new'.$row.'\').show();
     			             jQuery(\'#derived_product_existing'.$row.'\').hide();
