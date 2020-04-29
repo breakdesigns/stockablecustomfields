@@ -174,8 +174,7 @@ Class CustomfieldStockablecustomfields
 		}
 		catch (RuntimeException $e)
 		{
-			JError::raiseWarning(500, $e->getMessage());
-			return false;
+			throw $e;
 		}
 		return $result;
 	}
@@ -202,14 +201,18 @@ Class CustomfieldStockablecustomfields
                 $product_id = ArrayHelper::toInteger($product_id);
 				$q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
 			}
-			else $q->where('virtuemart_product_id='.(int)$product_id);
+			else {
+			    $q->where('virtuemart_product_id='.(int)$product_id);
+            }
 		}
 		if(!empty($custom_id)){
 			if(is_array($custom_id)){
                 $custom_id = ArrayHelper::toInteger($custom_id);
 				$q->where('pc.virtuemart_custom_id IN('.implode(',', $custom_id).')');
 			}
-			else $q->where('pc.virtuemart_custom_id='.(int)$custom_id);
+			else {
+			    $q->where('pc.virtuemart_custom_id='.(int)$custom_id);
+            }
 		}
 
 		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
@@ -318,8 +321,9 @@ Class CustomfieldStockablecustomfields
         $product_ids = ArrayHelper::toInteger($product_ids);
         $db = Factory::getDbo();
         $q = $db->getQuery(true);
-        $q->select('p.virtuemart_product_id, p.`product_in_stock` - p.`product_ordered` AS stock')->from('#__virtuemart_products AS p');
-        $q->where('p.published=1');
+
+        $q->select('p.virtuemart_product_id, p.`product_in_stock` - p.`product_ordered` AS stock')
+            ->from('#__virtuemart_products AS p')->where('p.published=1');
 
         //stock management when it's not catalogue
         if (!VmConfig::get('use_as_catalog', 0) && (VmConfig::get('stockhandle', 'none') == 'disableit' || $custom_params['outofstockcombinations'] == 'hidden')) {
@@ -328,25 +332,33 @@ Class CustomfieldStockablecustomfields
              * we may want to exclude a product no matter it has stock
              * this used mainly when the parent is stockable. We want to display it's combination
              */
-            if (!empty($exclude)) $q->where('(p.`product_in_stock` - p.`product_ordered` >0 OR p.`virtuemart_product_id`=' . (int)$exclude . ')');
-            else $q->where('p.`product_in_stock` - p.`product_ordered` >0');
+            if (!empty($exclude)) {
+                $q->where('(p.`product_in_stock` - p.`product_ordered` >0 OR p.`virtuemart_product_id`=' . (int)$exclude . ')');
+            }
+            else {
+                $q->where('p.`product_in_stock` - p.`product_ordered` >0');
+            }
         }
         $q->where('p.virtuemart_product_id IN(' . implode(',', $product_ids) . ')');
 
         //shopper groups
         $q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
-        $usermodel = VmModel::getModel('user');
+        $usermodel = \VmModel::getModel('user');
         $currentVMuser = $usermodel->getCurrentUser();
         $virtuemart_shoppergroup_ids = (array)$currentVMuser->shopper_groups;
         $virtuemart_shoppergroup_ids = ArrayHelper::toInteger($virtuemart_shoppergroup_ids);
+
         if (is_array($virtuemart_shoppergroup_ids) && !empty($virtuemart_shoppergroup_ids)) {
             $q->where('(ps.`virtuemart_shoppergroup_id` IS NULL OR ps.`virtuemart_shoppergroup_id` IN(' . implode(',', $virtuemart_shoppergroup_ids) . '))');
-        } else $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
+        } else {
+            $q->where('ps.`virtuemart_shoppergroup_id` IS NULL');
+        }
 
         $quoted_product_ids = array_map(function ($n) {
             $db = Factory::getDbo();
             return $db->quote($n);
         }, $product_ids);
+
         $q->order('FIELD(p.virtuemart_product_id, ' . implode(',', $quoted_product_ids) . ')');
         $db->setQuery($q);
 
@@ -400,6 +412,8 @@ Class CustomfieldStockablecustomfields
         $products = array();
         $products_final = array();
         $custom_values = array();
+        $productsModel = \VmModel::getModel('Product');
+
         foreach ($customfields as $cf) {
             /**
              * This is a workaround
@@ -407,13 +421,21 @@ Class CustomfieldStockablecustomfields
              * That means that in case we have the same value repeated several times (e.g. color:white), this value has different id each time
              * Since we can display the value only once in the FE (e.g. color:white) we are using the the 1st found customfield_id for that value
              */
-            if (!isset($custom_values[$cf->virtuemart_custom_id])) $custom_values[$cf->virtuemart_custom_id] = array();
+            if (!isset($custom_values[$cf->virtuemart_custom_id])) {
+                $custom_values[$cf->virtuemart_custom_id] = array();
+            }
             if (!in_array($cf->value, $custom_values[$cf->virtuemart_custom_id])) {
                 $custom_values[$cf->virtuemart_custom_id][$cf->id] = $cf->value;
                 $id = (string)$cf->id;
-            } else $id = (string)array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
-            if (!isset($products[$cf->virtuemart_product_id])) $products[$cf->virtuemart_product_id] = array();
-            if (!in_array($cf->id, $products[$cf->virtuemart_product_id])) $products[$cf->virtuemart_product_id][] = $id;
+            } else {
+                $id = (string)array_search($cf->value, $custom_values[$cf->virtuemart_custom_id]);
+            }
+            if (!isset($products[$cf->virtuemart_product_id])) {
+                $products[$cf->virtuemart_product_id] = array();
+            }
+            if (!in_array($cf->id, $products[$cf->virtuemart_product_id])) {
+                $products[$cf->virtuemart_product_id][] = $id;
+            }
         }
         //change the form to be easier to handle as json object
         foreach ($products as $pid => $p_array) {
