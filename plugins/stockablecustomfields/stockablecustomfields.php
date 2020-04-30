@@ -506,7 +506,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
      * @return bool
      * @throws Exception
      * @since 1.0
-     * @todo    If there is child id, check if it exists. Maybe the user has deleted that. If that's the case remove the values of the custom fields for that child
+     * @todo If there is child id, check if it exists. Maybe the user has deleted that. If that's the case remove the values of the custom fields for that child
      */
     public function plgVmOnStoreProduct($data, $plugin_param)
     {
@@ -577,7 +577,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                 if ($derived_product_id != $product_id) {
 
                     //update the parent_product_id of the derived
-                    $updated_product = $this->_updateproduct($derived_product_id, 'product_parent_id', $product_id);
+                    $this->_updateproduct($derived_product_id, 'product_parent_id', $product_id);
 
                 }
             }
@@ -843,7 +843,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
         $q->update('#__virtuemart_products')->set($db->quoteName($field) . '=' . $db->quote($value))->where('virtuemart_product_id=' . (int)$product_id);
         $db->setQuery($q);
         try {
-            $result = $db->query();
+            $result = $db->execute();
         } catch (\RuntimeException $e) {
             throw $e;
         }
