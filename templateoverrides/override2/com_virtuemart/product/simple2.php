@@ -157,18 +157,19 @@ if ($function == 'jSelectProduct') {
 					if($function=='jSelectProduct' && $product->virtuemart_product_id!=$product_id &&
 					    !in_array($product->virtuemart_product_id, $derived_product_ids) &&
 					    empty($child_prod) &&
-					    (empty($product->product_parent_id) || $product->product_parent_id==$product_id)):?>
+					    (empty($product->product_parent_id) || $product->product_parent_id==$product_id)) {?>
 
-						<button type="button" class="breakdesigns_btn productAddBtn"
-							title="<?php echo Text::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_LABEL')?>"
-							onclick="addToList('<?php echo $product->product_name;?>', '<?php echo $product->product_sku;?>', '<?php echo $product->product_in_stock?>','<?php echo $price;?>','<?php echo $product->virtuemart_product_id;?>');">
-							<i class="icon-plus"></i>
-						</button>
-						<?php
-						else:?>
-						<span><i class="icon-lock"></i></span>
-						<?php
-						endif;
+                        <button type="button" class="breakdesigns_btn productAddBtn"
+                                title="<?php echo Text::_('PLG_STOCKABLECUSTOMFIELDS_ADD_CUSTOMS_LABEL') ?>"
+                                onclick="addToList('<?php echo addslashes($product->product_name); ?>', '<?php echo $product->product_sku; ?>', '<?php echo $product->product_in_stock ?>','<?php echo $price; ?>','<?php echo $product->virtuemart_product_id; ?>');">
+                            <i class="icon-plus"></i>
+                        </button>
+                        <?php
+                        }
+						else { ?>
+                            <span><i class="icon-lock"></i></span>
+                            <?php
+                        }
 						?>
 					</td>
 					<td align="left"><?php echo $product->product_name;?></td>
