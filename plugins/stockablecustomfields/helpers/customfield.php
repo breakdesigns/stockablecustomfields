@@ -277,7 +277,7 @@ Class CustomfieldStockablecustomfields
                     $result = $tableCustomfields->bindChecknStore($data);
                 }
 
-                if ($custom->field_type == 'E') {
+                if ($custom->field_type == 'E' && !empty($customf)) {
                     PluginHelper::importPlugin('vmcustom');
                     $result = Factory::getApplication()->triggerEvent('plgVmOnStockableSave', array(
                         $data,
