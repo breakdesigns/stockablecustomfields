@@ -119,127 +119,118 @@ Class CustomfieldStockablecustomfields
         return $compatibles;
     }
 
-	/**
-	 * Get the params of a plugin with a given id
-	 *
-	 * @param int $custom_id
+    /**
+     * Get the params of a plugin with a given id
+     *
+     * @param int $custom_id
      * @return array
-	 * @since 1.0
-	 */
-	public function getCustomfieldParams($custom_id)
-	{
-		if (empty($custom_id)) {
-		    return [];
+     * @since 1.0
+     */
+    public function getCustomfieldParams($custom_id)
+    {
+        if (empty($custom_id)) {
+            return [];
         }
-		if (empty (self::$_customparams[$custom_id])) {
-			$db=Factory::getDbo();
-			$q=$db->getQuery(true);
-			$q->select('custom_params');
-			$q->from('#__virtuemart_customs');
-			$q->where('virtuemart_custom_id='.(int)$custom_id);
-			$db->setQuery($q);
-			$custom_params=$db->loadResult();
+        if (empty (self::$_customparams[$custom_id])) {
+            $db = Factory::getDbo();
+            $q = $db->getQuery(true);
+            $q->select('custom_params');
+            $q->from('#__virtuemart_customs');
+            $q->where('virtuemart_custom_id=' . (int)$custom_id);
+            $db->setQuery($q);
+            $custom_params = $db->loadResult();
 
-			if (empty($custom_params)) {
-			    return false;
+            if (empty($custom_params)) {
+                return false;
             }
-			$custom_param_array=explode('|', $custom_params);
-			$params_array=array();
-			foreach ($custom_param_array as $var) {
-				$values=explode('=',$var);
+            $custom_param_array = explode('|', $custom_params);
+            $params_array = array();
+            foreach ($custom_param_array as $var) {
+                $values = explode('=', $var);
 
-				if(isset($values[0])&& isset($values[1])){
-					$params_array[$values[0]]=json_decode($values[1]);//removes the double quotes
-				}
-				unset($values);
-			}
-			self::$_customparams[$custom_id]=$params_array;
-		}
-		return self::$_customparams[$custom_id];
-	}
-
-	/**
-	 * Updates fields in the virtuemart_product_customfields table
-	 *
-	 * @param 	int		$customfield_id
-	 * @param 	string	$field
-	 * @param 	mixed 	$value
-	 * @return	mixed	 mixed A database cursor resource on success, boolean false on failure.
-	 * @since	1.0
-	 */
-	public static function updateCustomfield($customfield_id, $field='customfield_params', $value='')
-	{
-		if (empty($customfield_id) || empty($field) || empty($value)) return false;
-		$db=Factory::getDbo();
-		$q=$db->getQuery(true);
-		$q->update('#__virtuemart_product_customfields')->set($db->quoteName($field).'='.$db->quote($value))->where('virtuemart_customfield_id='.(int)$customfield_id);
-		$db->setQuery($q);
-		try
-		{
-			$result=$db->query();
-		}
-		catch (RuntimeException $e)
-		{
-			throw $e;
-		}
-		return $result;
-	}
-
-	/**
-	 * Gets the custom fields of product/s from the database
-	 *
-	 * @param 	mixed 	$product_id	Int or Array of integers
-	 * @param 	mixed 	$custom_id Int or Array og integers
-	 * @param	int		$limit
-	 * @return	JTable	 A database object
-	 * @since	1.0
-	 */
-	public static function getCustomfields($product_id=0, $custom_id=0, $limit=false)
-	{
-		if(empty($product_id)&& empty($custom_id)) {
-		    return false;
+                if (isset($values[0]) && isset($values[1])) {
+                    $params_array[$values[0]] = json_decode($values[1]);//removes the double quotes
+                }
+                unset($values);
+            }
+            self::$_customparams[$custom_id] = $params_array;
         }
-		$db=Factory::getDbo();
-		$q=$db->getQuery(true);
-		$q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
-		if(!empty($product_id)){
-			if(is_array($product_id)) {
+        return self::$_customparams[$custom_id];
+    }
+
+    /**
+     * Updates fields in the virtuemart_product_customfields table
+     *
+     * @param int $customfield_id
+     * @param string $field
+     * @param mixed $value
+     * @return    mixed     mixed A database cursor resource on success, boolean false on failure.
+     * @since    1.0
+     */
+    public static function updateCustomfield($customfield_id, $field = 'customfield_params', $value = '')
+    {
+        if (empty($customfield_id) || empty($field) || empty($value)) return false;
+        $db = Factory::getDbo();
+        $q = $db->getQuery(true);
+        $q->update('#__virtuemart_product_customfields')->set($db->quoteName($field) . '=' . $db->quote($value))->where('virtuemart_customfield_id=' . (int)$customfield_id);
+        $db->setQuery($q);
+        try {
+            $result = $db->query();
+        } catch (\RuntimeException $e) {
+            throw $e;
+        }
+        return $result;
+    }
+
+    /**
+     * Gets the custom fields of product/s from the database
+     *
+     * @param mixed $product_id Int or Array of integers
+     * @param mixed $custom_id Int or Array og integers
+     * @param int $limit
+     * @return    JTable     A database object
+     * @since    1.0
+     */
+    public static function getCustomfields($product_id = 0, $custom_id = 0, $limit = false)
+    {
+        if (empty($product_id) && empty($custom_id)) {
+            return false;
+        }
+        $db = Factory::getDbo();
+        $q = $db->getQuery(true);
+        $q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
+        if (!empty($product_id)) {
+            if (is_array($product_id)) {
                 $product_id = ArrayHelper::toInteger($product_id);
-				$q->where('virtuemart_product_id IN('.implode(',', $product_id).')');
-			}
-			else {
-			    $q->where('virtuemart_product_id='.(int)$product_id);
+                $q->where('virtuemart_product_id IN(' . implode(',', $product_id) . ')');
+            } else {
+                $q->where('virtuemart_product_id=' . (int)$product_id);
             }
-		}
-		if(!empty($custom_id)){
-			if(is_array($custom_id)){
+        }
+        if (!empty($custom_id)) {
+            if (is_array($custom_id)) {
                 $custom_id = ArrayHelper::toInteger($custom_id);
-				$q->where('pc.virtuemart_custom_id IN('.implode(',', $custom_id).')');
-			}
-			else {
-			    $q->where('pc.virtuemart_custom_id='.(int)$custom_id);
+                $q->where('pc.virtuemart_custom_id IN(' . implode(',', $custom_id) . ')');
+            } else {
+                $q->where('pc.virtuemart_custom_id=' . (int)$custom_id);
             }
-		}
-
-		$q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
-		if(is_array($product_id)) {
-		    $q->order('FIELD(pc.virtuemart_product_id, '.implode(',', $product_id).'),pc.ordering');
         }
-		else {
-		    $q->order('pc.ordering ASC');
-        }
-		$db->setQuery($q,$offset=false, $limit);
 
-		try
-		{
-			$result=$db->loadObjectList();
-		}
-		catch (\RuntimeException $e)
-		{
-			throw $e;
-		}
-		return $result;
-	}
+        $q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
+        if (is_array($product_id)) {
+            $q->order('FIELD(pc.virtuemart_product_id, ' . implode(',', $product_id) . '),pc.ordering');
+        } else {
+            $q->order('pc.ordering ASC');
+        }
+        $db->setQuery($q, $offset = false, $limit);
+
+        try {
+            $result = $db->loadObjectList();
+        } catch (\RuntimeException $e) {
+            throw $e;
+        }
+        return $result;
+    }
 
     /**
      * Saves customfields to a product
@@ -420,7 +411,6 @@ Class CustomfieldStockablecustomfields
 		if (!empty($objects)) {
 		    $objects=array_values($objects);
         }
-
 		return $objects;
 	}
 
@@ -474,9 +464,11 @@ Class CustomfieldStockablecustomfields
     }
 
     /**
+     * Get the shop's default language
      *
      * @param string $lang
      * @return Language
+     * @since 1.5.1
      */
     public static function getDefaultLangTag($lang = null)
     {
