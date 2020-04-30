@@ -169,13 +169,15 @@ Class CustomfieldStockablecustomfields
      */
     public static function updateCustomfield($customfield_id, $field = 'customfield_params', $value = '')
     {
-        if (empty($customfield_id) || empty($field) || empty($value)) return false;
+        if (empty($customfield_id) || empty($field) || empty($value)) {
+            return false;
+        }
         $db = Factory::getDbo();
         $q = $db->getQuery(true);
         $q->update('#__virtuemart_product_customfields')->set($db->quoteName($field) . '=' . $db->quote($value))->where('virtuemart_customfield_id=' . (int)$customfield_id);
         $db->setQuery($q);
         try {
-            $result = $db->query();
+            $result = $db->execute();
         } catch (\RuntimeException $e) {
             throw $e;
         }
