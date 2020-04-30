@@ -3,10 +3,9 @@
  * Installation file for stockablecustomfields
  *
  * @package 	stockablecustomfields.install
- * @author 		Sakis Terzis
- * @copyright 	Copyright (c) 2017 breakdesigns.net. All rights reserved.
- * @license		GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- * @version 	$Id: script.php 2017-01-22 $
+ * @author	Sakis Terzis
+ * @copyright 	Copyright (c) 2017-2020 breakdesigns.net. All rights reserved.
+ * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 // Check to ensure this file is included in Joomla!
