@@ -58,25 +58,25 @@ Class JFormFieldCustoms extends JFormField{
 
 		//iterate to print the elements
 		if(!empty($selectedElements) && is_array($selectedElements)){
-			$isAssignedToProduct=CustomfieldStockablecustomfields::getCustomfields($product=false,$virtuemart_custom_id,$limit=1);
-			foreach ($selectedElements as $el){
-				//get the custom
-				$customObject=CustomfieldStockablecustomfields::getCustom($el);
-				$html.='
-				<li cclass="bd_element" id="element_'.$el.'">
-					<span class="element_name">'.JText::_($customObject->custom_title).'</span>
-					<span class="element_type">'.JText::_(CustomfieldStockablecustomfields::getCustomTypeName($customObject->field_type)).'</span>
-					<span class="element_id">'.$el.'</span>
-					<input type="hidden" name="custom_id[]" value="'.$el.'"/>
+            $isAssignedToProduct = CustomfieldStockablecustomfields::getCustomfields($product = false, $virtuemart_custom_id, $limit = 1, 'disabler', '=', 0);
+            foreach ($selectedElements as $el) {
+                //get the custom
+                $customObject = CustomfieldStockablecustomfields::getCustom($el);
+                $html .= '
+				<li cclass="bd_element" id="element_' . $el . '">
+					<span class="element_name">' . JText::_($customObject->custom_title) . '</span>
+					<span class="element_type">' . JText::_(CustomfieldStockablecustomfields::getCustomTypeName($customObject->field_type)) . '</span>
+					<span class="element_id">' . $el . '</span>
+					<input type="hidden" name="custom_id[]" value="' . $el . '"/>
 					<span class="bd_listtoolbar">
 						<span class="breakdesigns_btn element_move_btn" title="Drag to Move"><i class="bdicon-move"></i></span>';
-				//if there are assignments cannot change the custom fields
-				if(empty($isAssignedToProduct))$html.='<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>';
-				$html.='
+                //if there are assignments cannot change the custom fields
+                if (empty($isAssignedToProduct)) $html .= '<span class="breakdesigns_btn element_delete_btn" title="Remove"><i class="bdicon-cancel"></i></span>';
+                $html .= '
 					</span>
 				</li>';
-			}
-		}
+            }
+        }
 
 
 		$html.='</ul>';

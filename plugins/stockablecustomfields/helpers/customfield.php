@@ -154,45 +154,65 @@ Class CustomfieldStockablecustomfields
     }
 
     /**
-     * Updates fields in the virtuemart_product_customfields table
+     * Updates fields in the virtuemart_product_customfields table.
+     * All the passed records should have a 'virtuemart_customfield_id' property, used as PK.
      *
-     * @param int $customfield_id
+     * @param array|object $customfield
      * @param string $field
-     * @param mixed $value
-     * @return    mixed     mixed A database cursor resource on success, boolean false on failure.
-     * @since    1.0
+     * @return mixed A database cursor resource on success, boolean false on failure.
+     * @since  1.0
      */
-    public static function updateCustomfield($customfield_id, $field = 'customfield_params', $value = '')
+    public static function updateCustomfield($customfield, $field = '')
     {
-        if (empty($customfield_id) || empty($field) || empty($value)) {
+        if (empty($customfield)) {
             return false;
         }
-        $db = Factory::getDbo();
-        $q = $db->getQuery(true);
-        $q->update('#__virtuemart_product_customfields')->set($db->quoteName($field) . '=' . $db->quote($value))->where('virtuemart_customfield_id=' . (int)$customfield_id);
-        $db->setQuery($q);
-        try {
-            $result = $db->execute();
-        } catch (\RuntimeException $e) {
-            throw $e;
+        if (!is_object($customfield)) {
+            $customfield = (object)$customfield;
         }
+        $db = Factory::getDbo();
+
+        if($field && isset($customfield->$field)) {
+            $q = $db->getQuery(true);
+            $q->update('#__virtuemart_product_customfields')->set($db->quoteName($field) . '=' . $db->quote($customfield->$field))->where('virtuemart_customfield_id=' . $customfield->virtuemart_customfield_id);
+            $db->setQuery($q);
+            try {
+                $result = $db->execute();
+            } catch (\RuntimeException $e) {
+                throw $e;
+            }
+        }
+        else {
+            $result = $db->updateObject('#__virtuemart_product_customfields', $customfield, 'virtuemart_customfield_id');
+        }
+
         return $result;
     }
 
     /**
      * Gets the custom fields of product/s from the database
      *
-     * @param mixed $product_id Int or Array of integers
-     * @param mixed $custom_id Int or Array og integers
-     * @param int $limit
-     * @return    JTable     A database object
-     * @since    1.0
+     * @param int $product_id
+     * @param int $custom_id
+     * @param bool $limit
+     * @param string $fieldName
+     * @param string $operator
+     * @param string $fieldValue
+     * @return bool|mixed
+     * @since 1.0
      */
-    public static function getCustomfields($product_id = 0, $custom_id = 0, $limit = false)
+    public static function getCustomfields($product_id = 0, $custom_id = 0, $limit = false, $fieldName = '', $operator = '=', $fieldValue ='')
     {
         if (empty($product_id) && empty($custom_id)) {
             return false;
         }
+
+        // validate the passed operator
+        $operator = trim(strtoupper($operator));
+        if(!in_array($operator, ['=', '<>', '!=', 'IN', 'NOT IN'])) {
+            throw new \InvalidArgumentException('Wrong operator: ' . $operator . ', is used in the function \'getCustomfields\'');
+        }
+
         $db = Factory::getDbo();
         $q = $db->getQuery(true);
         $q->select('*,pc.virtuemart_customfield_id AS id,pc.customfield_value AS value')->from('#__virtuemart_product_customfields AS pc');
@@ -211,6 +231,10 @@ Class CustomfieldStockablecustomfields
             } else {
                 $q->where('pc.virtuemart_custom_id=' . (int)$custom_id);
             }
+        }
+
+        if (!empty($fieldName) && isset($fieldValue)) {
+            $q->where($db->quoteName($fieldName) . $operator . $db->quote($fieldValue));
         }
 
         $q->leftJoin('#__virtuemart_customs AS customs ON pc.virtuemart_custom_id=customs.virtuemart_custom_id');
@@ -234,42 +258,49 @@ Class CustomfieldStockablecustomfields
      *
      * @param int $product_id
      * @param array $customsfields
+     * @param bool $only_product_customfield_record If true, just insert/update a record in the #__virtuemart_product_customfields
      * @return array|bool|mixed
      * @throws Exception
      * @since 1.0
      */
-	public static function storeCustomFields($product_id, $customsfields)
+	public static function storeCustomFields($product_id, $customsfields, $only_product_customfield_record = false)
     {
         $result = false;
+        $virtuemart_customfield_ids = [];
         if (! empty($customsfields)) {
             $customfieldModel = \VmModel::getModel('Customfields');
-            $positive_storage = 0;
-            foreach ($customsfields as $custom_id => $customf) {
+
+            foreach ($customsfields as $custom_id => $customfield) {
                 $custom = self::getCustom($custom_id);
                 $data = array();
                 $data['virtuemart_product_id'] = $product_id;
                 $data['virtuemart_custom_id'] = $custom_id;
-                if (! empty($customf['value'])) {
-                    $data['customfield_value'] = $customf['value'];
+                $data['disabler'] = isset($customfield['disabler']) ? $customfield['disabler'] : 0;
+                $fieldName = $data['disabler'] ? 'disabler' :'';
+                $fieldValue = $data['disabler'];
+
+                if (! empty($customfield['value'])) {
+                    $data['customfield_value'] = $customfield['value'];
                 }
                 // get the existing customfields for that product with that custom_id
-                $customfieldz = self::getCustomfields($product_id, $custom_id);
+                $dbCustomfields = self::getCustomfields($product_id, $custom_id, $limit=1, $fieldName, '=', $fieldValue);
 
                 // exists a record for that product
-                if (! empty($customfieldz[0])) {
-                    $data['virtuemart_customfield_id'] = $customfieldz[0]->virtuemart_customfield_id;
+                if (! empty($dbCustomfields[0])) {
+                    $data['virtuemart_customfield_id'] = $dbCustomfields[0]->virtuemart_customfield_id;
 
-                    if ($custom->field_type != 'E') {
+                    if ($custom->field_type != 'E' || $only_product_customfield_record) {
                         // same customfield same value. Do nothing
-                        if ($customfieldz[0]->customfield_value == $customf['value']) {
+                        if ($dbCustomfields[0]->customfield_value == $customfield['value'] && $fieldValue == $dbCustomfields[0]->$fieldName) {
                             $result = true;
                         }
                         // same customfield different value. Update
                         else {
-                            $result = self::updateCustomfield($customfieldz[0]->virtuemart_customfield_id, 'customfield_value', $customf['value']);
+                            $result = self::updateCustomfield($data);
                         }
                     }
-                }                 // no customfield record. Insert
+                }
+                // no customfield record. Insert
                 else {
                     $tableCustomfields = $customfieldModel->getTable('product_customfields');
                     $tableCustomfields->setPrimaryKey('virtuemart_product_id');
@@ -277,30 +308,27 @@ Class CustomfieldStockablecustomfields
                     $result = $tableCustomfields->bindChecknStore($data);
                 }
 
-                if ($custom->field_type == 'E' && !empty($customf)) {
+                if ($custom->field_type == 'E' && !empty($customfield) && $only_product_customfield_record === false) {
                     PluginHelper::importPlugin('vmcustom');
                     $result = Factory::getApplication()->triggerEvent('plgVmOnStockableSave', array(
                         $data,
-                        $customf
+                        $customfield
                     ));
                 }
 
                 if (! $result) {
-                    \vmdebug('Stockables - Custom id:' . $custom_id . ':' . $customf['value'] . ' Not Saved to Product:', $product_id);
+                    \vmdebug('Stockables - Custom id:' . $custom_id . ':' . $customfield['value'] . ' Not Saved to Product:', $product_id);
                     // return false;
                 } else {
-                    $positive_storage ++;
-                    \vmdebug('Stockables - Custom Value:' . $custom_id . ':' . $customf['value'] . ' Saved to Product:' . $product_id);
+                    $virtuemart_customfield_ids[$custom_id] = $data['virtuemart_customfield_id'];
+                    \vmdebug('Stockables - Custom Value:' . $custom_id . ':' . $customfield['value'] . ' Saved to Product:' . $product_id);
                 }
                 if (! empty($tableCustomfields)) {
                     unset($tableCustomfields);
                 }
             }
-            if ($positive_storage == count($customsfields) - 1) {
-                $result = true;
-            }
         }
-        return $result;
+        return $virtuemart_customfield_ids;
     }
 
 	/**

@@ -51,7 +51,7 @@ if ($function == 'jSelectProduct') {
     if (!empty($product_id) && !empty($custom_id)) {
         require_once(JPATH_PLUGINS . DIRECTORY_SEPARATOR . 'vmcustom' . DIRECTORY_SEPARATOR . 'stockablecustomfields' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'customfield.php');
         $customfield = CustomfieldStockablecustomfields::getInstance($custom_id);
-        $parent_customfields = CustomfieldStockablecustomfields::getCustomfields($product_id, $custom_id);
+        $parent_customfields = CustomfieldStockablecustomfields::getCustomfields($product_id, $custom_id, $limit = false, 'disabler', '=', 0);
         //get the already derived products. These should not be selectable
 
         foreach ($parent_customfields as $pc) {
