@@ -48,7 +48,7 @@ if($function=='jSelectCustom'){
 }
 $incompatible_customs=array('C','D','T','M','G','A','X','Y','R','Z');
 //get the plugins that can be used
-$compatible_plugins=CustomfieldStockablecustomfields::getCompatiblePlugins();
+$compatible_plugins=CustomfieldStockablecustomfield::getCompatiblePlugins();
 
 $customs = $this->customs->items;
 ?>

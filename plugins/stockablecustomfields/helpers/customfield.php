@@ -18,10 +18,24 @@
  * @since 1.0
  *
  */
-Class CustomfieldStockablecustomfields
+Class CustomfieldStockablecustomfield
 {
+    /**
+     * @var int
+     * @since 1.0
+     */
 	protected $_custom_id;
+
+    /**
+     * @var CustomfieldStockablecustomfield
+     * @since 1.0
+     */
 	protected static $instances;
+
+    /**
+     * @var array
+     * @since 1.0
+     */
 	protected static $_customparams;
 
     /**
@@ -45,13 +59,13 @@ Class CustomfieldStockablecustomfields
      * Get the singleton customfield instance
      *
      * @param int $custom_id
-     * @return CustomfieldStockablecustomfields
+     * @return CustomfieldStockablecustomfield
      * @since 2.0
      */
     public static function getInstance($custom_id)
     {
         if (empty(self::$instances[$custom_id])) {
-            self::$instances[$custom_id] = new CustomfieldStockablecustomfields($custom_id);
+            self::$instances[$custom_id] = new CustomfieldStockablecustomfield($custom_id);
         }
         return self::$instances[$custom_id];
     }
@@ -126,10 +140,10 @@ Class CustomfieldStockablecustomfields
      * @return array
      * @since 1.0
      */
-    public function getCustomfieldParams($custom_id)
+    public function getCustomfieldParams($custom_id = 0)
     {
         if (empty($custom_id)) {
-            return [];
+            $custom_id = $this->_custom_id;;
         }
         if (empty (self::$_customparams[$custom_id])) {
             $custom = self::getCustom($custom_id);
@@ -254,6 +268,30 @@ Class CustomfieldStockablecustomfields
     }
 
     /**
+     * Get the child products of the parent from the stockable's params
+     *
+     * @param $product_parent_id
+     * @param $stockable_custom_id
+     * @return array
+     * @since 1.5.1
+     */
+    public function getDerivedProductIds($product_parent_id)
+    {
+        $db_derived_product_ids = [];
+        $stockable_custom_fields = CustomfieldStockablecustomfield::getCustomfields($product_parent_id, $this->_custom_id, $limit = false, 'disabler', '=', 0);
+        foreach ($stockable_custom_fields as $stockable_custom_field) {
+            $customfield_params = explode('|', $stockable_custom_field->customfield_params);
+            foreach ($customfield_params as $cparam) {
+                $item = explode('=', $cparam);
+                if ($item[0] == 'child_product_id') {
+                    $db_derived_product_ids[] = json_decode($item[1]);
+                }
+            }
+        }
+        return $db_derived_product_ids;
+    }
+
+    /**
      * Saves customfields to a product
      *
      * @param int $product_id
@@ -276,7 +314,7 @@ Class CustomfieldStockablecustomfields
                 $data['virtuemart_product_id'] = $product_id;
                 $data['virtuemart_custom_id'] = $custom_id;
                 $data['disabler'] = isset($customfield['disabler']) ? $customfield['disabler'] : 0;
-                $fieldName = $data['disabler'] ? 'disabler' :'';
+                $fieldName = isset($data['disabler']) ? 'disabler' :'';
                 $fieldValue = $data['disabler'];
 
                 if (! empty($customfield['value'])) {

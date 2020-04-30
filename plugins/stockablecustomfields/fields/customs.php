@@ -14,7 +14,7 @@ jimport('joomla.form.formfield');
 JHtml::_('behavior.framework', true);
 JHtml::_('behavior.modal');
 
-if(!class_exists('CustomfieldStockablecustomfields'))require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
+if(!class_exists('CustomfieldStockablecustomfield'))require_once(JPATH_PLUGINS.DIRECTORY_SEPARATOR.'vmcustom'.DIRECTORY_SEPARATOR.'stockablecustomfields'.DIRECTORY_SEPARATOR.'helpers'.DIRECTORY_SEPARATOR.'customfield.php');
 
 /**
  *
@@ -58,14 +58,14 @@ Class JFormFieldCustoms extends JFormField{
 
 		//iterate to print the elements
 		if(!empty($selectedElements) && is_array($selectedElements)){
-            $isAssignedToProduct = CustomfieldStockablecustomfields::getCustomfields($product = false, $virtuemart_custom_id, $limit = 1, 'disabler', '=', 0);
+            $isAssignedToProduct = CustomfieldStockablecustomfield::getCustomfields($product = false, $virtuemart_custom_id, $limit = 1, 'disabler', '=', 0);
             foreach ($selectedElements as $el) {
                 //get the custom
-                $customObject = CustomfieldStockablecustomfields::getCustom($el);
+                $customObject = CustomfieldStockablecustomfield::getCustom($el);
                 $html .= '
 				<li cclass="bd_element" id="element_' . $el . '">
 					<span class="element_name">' . JText::_($customObject->custom_title) . '</span>
-					<span class="element_type">' . JText::_(CustomfieldStockablecustomfields::getCustomTypeName($customObject->field_type)) . '</span>
+					<span class="element_type">' . JText::_(CustomfieldStockablecustomfield::getCustomTypeName($customObject->field_type)) . '</span>
 					<span class="element_id">' . $el . '</span>
 					<input type="hidden" name="custom_id[]" value="' . $el . '"/>
 					<span class="bd_listtoolbar">

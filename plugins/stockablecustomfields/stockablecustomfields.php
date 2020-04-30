@@ -173,8 +173,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
         $html = '';
         $parent_custom_id = $field->virtuemart_custom_id;
-        $customfield = CustomfieldStockablecustomfields::getInstance($parent_custom_id);
-        $custom_params = $customfield->getCustomfieldParams($parent_custom_id);
+        $customfield = CustomfieldStockablecustomfield::getInstance($parent_custom_id);
+        $custom_params = $customfield->getCustomfieldParams();
         //the customs that consists the stockable
         $custom_ids = $custom_params['custom_id'];
 
@@ -280,10 +280,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
         $i = 0;
         foreach ($custom_ids as $custom_id) {
             $subcustomfield = false;
-            $custom = CustomfieldStockablecustomfields::getCustom($custom_id);
+            $custom = CustomfieldStockablecustomfield::getCustom($custom_id);
             if (!empty($derived_product->virtuemart_product_id)) {
                 //get the other fields
-                $subcustomfields = CustomfieldStockablecustomfields::getCustomfields($derived_product->virtuemart_product_id, $custom_id, $limit = false, 'disabler', '=', 0);
+                $subcustomfields = CustomfieldStockablecustomfield::getCustomfields($derived_product->virtuemart_product_id, $custom_id, $limit = false, 'disabler', '=', 0);
                 $subcustomfield = reset($subcustomfields);
             } else {
                 $subcustomfield = $custom;
@@ -548,7 +548,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                  * Get it from the db.
                  * This will not be 100% accurate if the same custom is assigned to the child product more than once
                  */
-                $virtuemart_customfield_ids = \CustomfieldStockablecustomfields::getCustomfields($product_id, $cid=0, $limit = 50, 'disabler', '=', 0);
+                $virtuemart_customfield_ids = \CustomfieldStockablecustomfield::getCustomfields($product_id, $cid=0, $limit = 50, 'disabler', '=', 0);
 
                 //We need the numerical index of the customfield to find it's order. The $row is not reliable for that as it does not decrease when we delete a custom field
                 $index = array_search($row, array_keys($data['field']));
@@ -599,13 +599,14 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                     $customfield->virtuemart_customfield_id = $virtuemart_customfield_id;
                     $customfield->customfield_params = 'custom_id=""|child_product_id="' . $derived_product_id . '"|';
 
-                    $upated = \CustomfieldStockablecustomfields::updateCustomfield($customfield, 'customfield_params');
+                    $upated = \CustomfieldStockablecustomfield::updateCustomfield($customfield, 'customfield_params');
                     \vmdebug('Stockables - Master Product\'s custom field\'s ' . $virtuemart_customfield_id . '  params update status:', $upated);
                 }
 
                 //store the custom fields to the child product
-                $customfield_ids = \CustomfieldStockablecustomfields::storeCustomFields($derived_product_id, $plugin_param['stockablecustomfields']);
-                self::$parentProductCustomfieldId = $plugin_param['parent_product_as_derived'] && empty(self::$parentProductCustomfieldId) && $derived_product_id == $product_id ? $customfield_ids : self::$parentProductCustomfieldId;
+                $customfield_ids = \CustomfieldStockablecustomfield::storeCustomFields($derived_product_id, $plugin_param['stockablecustomfields']);
+                self::$parentProductCustomfieldId = empty(self::$parentProductCustomfieldId) && $derived_product_id == $product_id ? $customfield_ids : self::$parentProductCustomfieldId;
+
 
                 // Success
                 if (count($customfield_ids) > 0) {
@@ -616,9 +617,9 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                     if($derived_product_id != $product_id && self::$parentProductCustomfieldId) {
                         $childCustomData = [];
                         foreach (self::$parentProductCustomfieldId as $sub_custom_id => $custom_field_id) {
-                            $childCustomData[$sub_custom_id] = ['disabler' => $custom_field_id, 'virtuemart_product_id' => $derived_product_id, 'custom_id' => $sub_custom_id];
+                            $childCustomData[$sub_custom_id] = ['customfield_value' =>'Set As Disabler, to the parent product','disabler' => $custom_field_id, 'virtuemart_product_id' => $derived_product_id, 'custom_id' => $sub_custom_id];
                         }
-                        \CustomfieldStockablecustomfields::storeCustomFields($derived_product_id, $childCustomData, $only_product_customfield_record = true);
+                        \CustomfieldStockablecustomfield::storeCustomFields($derived_product_id, $childCustomData, $only_product_customfield_record = true);
                     }
 
                     //check if an image was uploaded
@@ -905,8 +906,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
      */
     protected function isStockable($custom_id)
     {
-        $customfield = CustomfieldStockablecustomfields::getInstance($custom_id);
-        $custom_params = $customfield->getCustomfieldParams($custom_id);
+        $customfield = CustomfieldStockablecustomfield::getInstance($custom_id);
+        $custom_params = $customfield->getCustomfieldParams();
         if (isset($custom_params['parentOrderable']) && isset($custom_params['outofstockcombinations'])) {
             return true;
         }
@@ -950,8 +951,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
         $stockable_customfields = array();
         $custom_id = $group->virtuemart_custom_id;
-        $customfield = CustomfieldStockablecustomfields::getInstance($custom_id);
-        $custom_params = $customfield->getCustomfieldParams($custom_id);
+        $customfield = CustomfieldStockablecustomfield::getInstance($custom_id);
+        $custom_params = $customfield->getCustomfieldParams();
         $custom_params['outofstockcombinations'] = !empty($custom_params['outofstockcombinations']) ? $custom_params['outofstockcombinations'] : 'enabled';
 
         if (empty($group->pb_group_id)) {
@@ -988,17 +989,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
          * we need to get the stockable cuctomfields of the parent, to load the child product ids from the params of it's stockable custom fields
          * We use them to load their sub custom fields and the order of display of the sub custom fields
          */
-        $parent_customfields = CustomfieldStockablecustomfields::getCustomfields($product_parent_id, $custom_id, $limit = 50, 'disabler', '=', 0);
-        $derived_product_ids = array();
-        foreach ($parent_customfields as $pc) {
-            $customfield_params = explode('|', $pc->customfield_params);
-            foreach ($customfield_params as $cparam) {
-                $item = explode('=', $cparam);
-                if ($item[0] == 'child_product_id') {
-                    $derived_product_ids[] = json_decode($item[1]);
-                }
-            }
-        }
+        $derived_product_ids = $customfield->getDerivedProductIds($product_parent_id);
 
         $viewdata = $group;
         $viewdata->product = $product;
@@ -1013,7 +1004,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
              * when we visit the parent product we want that combination there.
              * But disabled by the script
              */
-            $derived_products = \CustomfieldStockablecustomfields::getOrderableProducts($derived_product_ids, $custom_params, $exclude = $parent_derived);
+            $derived_products = \CustomfieldStockablecustomfield::getOrderableProducts($derived_product_ids, $custom_params, $exclude = $parent_derived);
             $derived_product_ids = array_keys($derived_products);
         }
 
@@ -1025,7 +1016,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
             //wraps all the html generated
             $html .= '<div class="stockablecustomfields_fields_wrapper" id="' . rand(0, 100) . '">';
             foreach ($custom_ids as $cust_id) {
-                $custom = \CustomfieldStockablecustomfields::getCustom($cust_id);
+                $custom = \CustomfieldStockablecustomfield::getCustom($cust_id);
                 $viewdata->virtuemart_custom_id = $custom->virtuemart_custom_id;
                 $viewdata->custom = $custom;
                 $custom->pb_group_id = $group->pb_group_id;
@@ -1034,11 +1025,11 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                 $html .= '<div class="customfield_wrapper" id="customfield_wrapper_' . $cust_id . '">';
                 if ($custom->field_type != 'E') {
                     //get it from the built in function
-                    $stockable_customfields_tmp = CustomfieldStockablecustomfields::getCustomfields($derived_product_ids, $cust_id, $limit = false, 'disabler', '=', 0);;
+                    $stockable_customfields_tmp = CustomfieldStockablecustomfield::getCustomfields($derived_product_ids, $cust_id, $limit = false, 'disabler', '=', 0);;
                     $stockable_customfields_display = array();
                     if (!empty($stockable_customfields_tmp)) {
                         //filter to remove duplicates
-                        $stockable_customfields_display = CustomfieldStockablecustomfields::filterUniqueValues($stockable_customfields_tmp);
+                        $stockable_customfields_display = CustomfieldStockablecustomfield::filterUniqueValues($stockable_customfields_tmp);
                     }
                     $viewdata->options = $stockable_customfields_display;
                     //cart input
@@ -1075,7 +1066,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
             //print the scripts for the fe
             if (!empty($stockable_customfields)) {
-                $customfield_product_combinations = CustomfieldStockablecustomfields::getProductCombinations($stockable_customfields, $derived_products);
+                $customfield_product_combinations = CustomfieldStockablecustomfield::getProductCombinations($stockable_customfields, $derived_products);
                 $childproduct_urls = $this->getProductUrls($derived_product_ids, $product->virtuemart_category_id);
 
                 foreach ($customfield_product_combinations->combinations as &$derived_product) {
@@ -1149,10 +1140,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
             return false;
         }
         $custom_id = $productCustom->virtuemart_custom_id;
-        $customfield = \CustomfieldStockablecustomfields::getInstance($custom_id);
-        $custom_params = $customfield->getCustomfieldParams($custom_id);
+        $customfield = \CustomfieldStockablecustomfield::getInstance($custom_id);
+        $custom_params = $customfield->getCustomfieldParams();
         $custom_ids = $custom_params['custom_id'];
-        $newProductCustoms = \CustomfieldStockablecustomfields::getCustomfields($product->virtuemart_product_id, $custom_ids, $limit = false, 'disabler', '=', 0);
+        $newProductCustoms = \CustomfieldStockablecustomfield::getCustomfields($product->virtuemart_product_id, $custom_ids, $limit = false, 'disabler', '=', 0);
 
         if (!empty($newProductCustoms)) {
             foreach ($newProductCustoms as $newProductCustom) {
