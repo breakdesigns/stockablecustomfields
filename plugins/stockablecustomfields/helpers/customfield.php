@@ -132,13 +132,8 @@ Class CustomfieldStockablecustomfields
             return [];
         }
         if (empty (self::$_customparams[$custom_id])) {
-            $db = Factory::getDbo();
-            $q = $db->getQuery(true);
-            $q->select('custom_params');
-            $q->from('#__virtuemart_customs');
-            $q->where('virtuemart_custom_id=' . (int)$custom_id);
-            $db->setQuery($q);
-            $custom_params = $db->loadResult();
+            $custom = self::getCustom($custom_id);
+            $custom_params = $custom->custom_params;
 
             if (empty($custom_params)) {
                 return false;
