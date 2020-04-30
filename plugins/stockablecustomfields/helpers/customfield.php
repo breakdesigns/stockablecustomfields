@@ -326,10 +326,11 @@ Class CustomfieldStockablecustomfields
 	{
         $product_ids = ArrayHelper::toInteger($product_ids);
 
-        // get the current language to get the product name
-        $shopLanguage = self::getDefaultLangTag();
+        // get the default language to get the product name
+        $defaultLanguageTag = self::getDefaultLangTag();
+        $currentLanguage = Factory::getLanguage()->getTag();
         $vmLanguages = \VmConfig::get('active_languages', array(
-            $shopLanguage
+            $defaultLanguageTag
         ));
 
         $db = Factory::getDbo();
@@ -355,11 +356,15 @@ Class CustomfieldStockablecustomfields
         $q->where('p.virtuemart_product_id IN(' . implode(',', $product_ids) . ')');
 
         // Get the name only if the current language is valid
-        if(in_array($shopLanguage, $vmLanguages)) {
-            $db_language_suffix = strtolower(str_replace('-', '_', $shopLanguage));
-            $q->leftJoin('#__virtuemart_products_' . $db_language_suffix . ' AS l ON p.virtuemart_product_id=l.virtuemart_product_id');
-            $q->select('l.product_name AS product_name');
+        if(in_array($currentLanguage, $vmLanguages)) {
+            $db_language_suffix = strtolower(str_replace('-', '_', $currentLanguage));
         }
+        else {
+            $db_language_suffix = strtolower(str_replace('-', '_', $defaultLanguageTag));
+        }
+
+        $q->leftJoin('#__virtuemart_products_' . $db_language_suffix . ' AS l ON p.virtuemart_product_id=l.virtuemart_product_id');
+        $q->select('l.product_name AS product_name');
 
         //shopper groups
         $q->leftJoin('`#__virtuemart_product_shoppergroups` as ps ON p.`virtuemart_product_id` = ps.`virtuemart_product_id`');
