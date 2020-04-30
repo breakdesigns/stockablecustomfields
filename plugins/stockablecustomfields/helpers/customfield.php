@@ -241,17 +241,17 @@ Class CustomfieldStockablecustomfields
 		return $result;
 	}
 
-	/**
-	 * Saves customfields to a product
-	 *
-	 * @param 	int $product_id
-	 * @param 	array $customsfields
-     * @return boolean
+    /**
+     * Saves customfields to a product
+     *
+     * @param int $product_id
+     * @param array $customsfields
+     * @return array|bool|mixed
+     * @throws Exception
      * @since 1.0
-	 */
+     */
 	public static function storeCustomFields($product_id, $customsfields)
     {
-        $log = array();
         $result = false;
         if (! empty($customsfields)) {
             $customfieldModel = \VmModel::getModel('Customfields');
@@ -275,7 +275,8 @@ Class CustomfieldStockablecustomfields
                         // same customfield same value. Do nothing
                         if ($customfieldz[0]->customfield_value == $customf['value']) {
                             $result = true;
-                        }                         // same customfield different value. Update
+                        }
+                        // same customfield different value. Update
                         else {
                             $result = self::updateCustomfield($customfieldz[0]->virtuemart_customfield_id, 'customfield_value', $customf['value']);
                         }
