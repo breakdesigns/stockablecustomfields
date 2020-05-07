@@ -7,7 +7,7 @@
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
 	<copyright>Copyright(c) 2015-2020 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
-	<version>1.5.1</version>
+	<version>1.5.1beta1</version>
 	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.5.1 | 30 April 2020)</i></h3>
     <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_stockables.png"/></span>
     <p style="margin-top:5px; font-size:12px; font-weight:0;">Create stockable variations using custom fields</p>

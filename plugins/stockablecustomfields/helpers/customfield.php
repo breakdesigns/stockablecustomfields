@@ -518,7 +518,7 @@ Class CustomfieldStockablecustomfield
         //change the form to be easier to handle as json object
         foreach ($products as $pid => $p_array) {
             $product_name = isset($product_array[$pid]['product_name']) ? $product_array[$pid]['product_name'] : '';
-            $products_final[] = array('product_id' => $pid, 'customfield_ids' => $p_array, 'stock' => $product_array[$pid]['stock'], 'product_name' => $product_name);
+            $products_final[] = array('product_id' => $pid, 'customfield_ids' => $p_array, 'stock' => $product_array[$pid]['stock'], 'product_name' => htmlspecialchars($product_name,  ENT_QUOTES, 'UTF-8'));
         }
 
         $return = new \stdClass();
