@@ -619,7 +619,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                         foreach (self::$parentProductCustomfieldId as $sub_custom_id => $custom_field_id) {
                             $childCustomData[$sub_custom_id] = ['customfield_value' =>'Set As Disabler, to the parent product','disabler' => $custom_field_id, 'virtuemart_product_id' => $derived_product_id, 'custom_id' => $sub_custom_id];
                         }
-                        \CustomfieldStockablecustomfield::storeCustomFields($derived_product_id, $childCustomData, $only_product_customfield_record = true);
+                        \CustomfieldStockablecustomfield::storeCustomFields($derived_product_id, $childCustomData, true, true);
                     }
 
                     //check if an image was uploaded

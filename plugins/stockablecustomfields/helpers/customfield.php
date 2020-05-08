@@ -223,7 +223,7 @@ Class CustomfieldStockablecustomfield
 
         // validate the passed operator
         $operator = trim(strtoupper($operator));
-        if(!in_array($operator, ['=', '<>', '!=', 'IN', 'NOT IN'])) {
+        if(!in_array($operator, ['=', '>', '<', '<>', '!=', 'IN', 'NOT IN'])) {
             throw new \InvalidArgumentException('Wrong operator: ' . $operator . ', is used in the function \'getCustomfields\'');
         }
 
@@ -297,11 +297,12 @@ Class CustomfieldStockablecustomfield
      * @param int $product_id
      * @param array $customsfields
      * @param bool $only_product_customfield_record If true, just insert/update a record in the #__virtuemart_product_customfields
-     * @return array|bool|mixed
+     * @param bool $clear_previous_product_customfields_on_new
+     * @return array
      * @throws Exception
      * @since 1.0
      */
-	public static function storeCustomFields($product_id, $customsfields, $only_product_customfield_record = false)
+	public static function storeCustomFields($product_id, $customsfields, $only_product_customfield_record = false, $clear_previous_product_customfields_on_new = false)
     {
         $result = false;
         $virtuemart_customfield_ids = [];
@@ -340,6 +341,10 @@ Class CustomfieldStockablecustomfield
                 }
                 // no customfield record. Insert
                 else {
+                    // we are using that to create `dissabler` custom fields. Remove previous 'dissabler' records for that product and that custom_id
+                    if($clear_previous_product_customfields_on_new && $only_product_customfield_record) {
+                        self::deleteProductCustomfields($custom_id, $product_id, $fieldName, '>', 0);
+                    }
                     $tableCustomfields = $customfieldModel->getTable('product_customfields');
                     $tableCustomfields->setPrimaryKey('virtuemart_product_id');
                     $tableCustomfields->_xParams = 'customfield_params';
@@ -368,6 +373,41 @@ Class CustomfieldStockablecustomfield
         }
         return $virtuemart_customfield_ids;
     }
+
+    /**
+     * Delete records in the `#__virtuemart_product_customfields`, based on the passed criteria
+     *
+     * @param $custom_id
+     * @param $product_id
+     * @param $fieldName
+     * @param string $operator
+     * @param $fieldValue
+     * @throws \RuntimeException;
+     * @return bool
+     * @since 1.5.1
+     */
+    public static function deleteProductCustomfields($custom_id, $product_id, $fieldName, $operator = '=', $fieldValue)
+    {
+        // validate the passed operator
+        $operator = trim(strtoupper($operator));
+        if(!in_array($operator, ['=', '>', '<', '<>', '!=', 'IN', 'NOT IN'])) {
+            throw new \InvalidArgumentException('Wrong operator: ' . $operator . ', is used in the function \'deleteProductCustomfields\'');
+        }
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+        $query->delete('#__virtuemart_product_customfields')
+            ->where($db->quoteName('virtuemart_custom_id'). '=' . $db->quote((int)$custom_id))
+            ->where($db->quoteName('virtuemart_product_id'). '=' . $db->quote((int)$product_id));
+
+        if (!empty($fieldName) && isset($fieldValue)) {
+            $query->where($db->quoteName($fieldName) . $operator . $db->quote($fieldValue));
+        }
+
+        $db->setQuery($query);
+        $db->execute();
+        return true;
+    }
+
 
 	/**
 	 * Check and return orderable products (have stock etc based on the VM config)
