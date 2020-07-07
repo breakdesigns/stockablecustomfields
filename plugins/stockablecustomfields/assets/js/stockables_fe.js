@@ -11,8 +11,14 @@ if (typeof Stockablecustomfields === "undefined") {
 					var form = jQuery(this);
 					var stockArea=form.find('.stockablecustomfields_fields_wrapper');
 					//not found go next
-					if(stockArea.length==0)return true;
-					StockableObj[i]=Stockablecustomfields.createStockableObject(form);
+					if(stockArea.length==0) {
+						return true;
+					}
+					let stockable = Stockablecustomfields.createStockableObject(form);
+					if(typeof stockable == 'undefined') {
+						return;
+					}
+					StockableObj[i]=stockable;
 
                     StockableObj[i].setSelected();
                     StockableObj[i].handleOutOfStock();
