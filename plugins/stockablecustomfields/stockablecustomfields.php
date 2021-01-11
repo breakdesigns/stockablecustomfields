@@ -1085,7 +1085,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                 $html .= '<script>' . $finalScript . '</script>';
 
                 $doc = Factory::getDocument();
-                $doc->addScript(Uri::root() . 'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
+                // load it, as in Custom Filters
+                $doc->addScript(Uri::root(true) . 'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 
                 $group->stockableCombinations = $customfield_product_combinations;
                 $group->stockableCustom_ids = $custom_ids;
