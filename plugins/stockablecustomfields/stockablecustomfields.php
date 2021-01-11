@@ -944,6 +944,8 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
             $product->orderable = true;
         }
 
+        $context = $input->get('option') . $input->get('view') . $input->get('view') . $input->get('bundled_products', false);
+
         // we want this function to run only once. Not for every customfield record of this type
         static $printed = false;
         static $printed_inbundle = false;
@@ -979,10 +981,10 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
          * this can cause problem when we call that function in a group with a default product.
          * VM will call that function 1st for the generation of the product, setting the printed var to true
          */
-        if ($printed == $product->virtuemart_product_id && $input->get('option') != 'com_productbuilder') {
+        if ($printed == $context . $product->virtuemart_product_id && $input->get('option') != 'com_productbuilder') {
             return false;
         }
-        $printed = $product->virtuemart_product_id;
+        $printed = $context . $product->virtuemart_product_id;
         $ischild = false;
 
         /*
