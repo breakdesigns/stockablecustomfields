@@ -1,7 +1,7 @@
 <?php
 /**
  * @package stockablecustomfield
- * @copyright Copyright (C) 2014-2020 breakdesigns.net . All rights reserved.
+ * @copyright Copyright (C) 2014-2021 breakdesigns.net . All rights reserved.
  * @license GNU General Public License version 2 or later; see LICENSE.txt
  */
 
@@ -18,6 +18,7 @@ use Joomla\CMS\Date\Date;
 use Joomla\CMS\Table\Table;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Language\Multilanguage;
 
 
 /**
@@ -1086,7 +1087,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 
                 $doc = Factory::getDocument();
                 // load it, as in Custom Filters
-                $doc->addScript(Uri::root(true) . 'plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
+                $doc->addScript(Uri::root(true) . '/plugins/vmcustom/stockablecustomfields/assets/js/stockables_fe.js');
 
                 $group->stockableCombinations = $customfield_product_combinations;
                 $group->stockableCustom_ids = $custom_ids;
@@ -1110,11 +1111,17 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
     {
         $product_urls = array();
         $input = Factory::getApplication()->input;
+        $url = 'index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . (int)$category_id;
+        if(Multilanguage::isEnabled()) {
+            $url .= '&lang=' . Factory::getLanguage()->getTag() ;
+        }
+
         foreach ($product_ids as $pid) {
+
             if ($input->get('view', '') == 'productdetails') {
-                $product_urls[$pid] = Route::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . (int)$category_id . '&virtuemart_product_id=' . (int)$pid);
+                $product_urls[$pid] = Route::_($url. '&virtuemart_product_id=' . (int)$pid);
             } else {
-                $route = Route::_('index.php?option=com_virtuemart&view=productdetails&virtuemart_category_id=' . (int)$category_id);
+                $route = Route::_($url);
                 if (strpos($route, '?') === false) {
                     $route .= '?virtuemart_product_id=' . (int)$pid;
                 } else {
