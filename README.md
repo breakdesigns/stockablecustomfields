@@ -17,6 +17,15 @@ What are the benefits of using it?
 * The custom field values that regard a child product, are assigned/stored to that. That means that the child products can be filtered or searched using these custom fields.
 
 
+Installation
+---------------------
+1. Clone the repository in your system:
+`git clone git@github.com:breakdesigns/stockablecustomfields.git`
+
+2. Zip the downloaded folder.
+
+3. Install the zip file using the Joomla installer.
+
 Do you want to improve it?
 ---------------------
 * To contribute code, you can do that through [github] (https://github.com/breakdesigns/stockablecustomfields) or by [contacting us](https://breakdesigns.net/contact) 
