@@ -28,12 +28,12 @@ Installation
 
 Usage
 ---------------------
-Please read the [documentation] (https://breakdesigns.net/extensions/joomla/stockable-custom-fields/documentation).
+Please read the [documentation](https://breakdesigns.net/extensions/joomla/stockable-custom-fields/documentation).
 
 Do you want to improve it?
 ---------------------
-* To contribute code, you can do that through [github] (https://github.com/breakdesigns/stockablecustomfields) or by [contacting us](https://breakdesigns.net/contact) 
-* To report a bug, you can do that through [github] (https://github.com/breakdesigns/stockablecustomfields/issues) or by [contacting us](https://breakdesigns.net/contact) 
+* To contribute code, you can do that through [github](https://github.com/breakdesigns/stockablecustomfields) or by [contacting us](https://breakdesigns.net/contact) 
+* To report a bug, you can do that through [github](https://github.com/breakdesigns/stockablecustomfields/issues) or by [contacting us](https://breakdesigns.net/contact) 
 
 Copyright
 ---------------------
