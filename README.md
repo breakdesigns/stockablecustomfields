@@ -26,6 +26,10 @@ Installation
 
 3. Install the zip file using the Joomla installer.
 
+Usage
+---------------------
+Please read the [documentation] (https://breakdesigns.net/extensions/joomla/stockable-custom-fields/documentation).
+
 Do you want to improve it?
 ---------------------
 * To contribute code, you can do that through [github] (https://github.com/breakdesigns/stockablecustomfields) or by [contacting us](https://breakdesigns.net/contact) 
