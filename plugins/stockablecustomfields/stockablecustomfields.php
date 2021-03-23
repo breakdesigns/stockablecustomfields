@@ -646,7 +646,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
 	public function isValidInput($input)
 	{
 		foreach ($input as $custom_id=>$inp){
-			$value= StringHelper::trim($inp['value']);
+			$value= isset($inp['value']) ? StringHelper::trim($inp['value']) : '';
 			if(isset($inp['value']) && empty($value)) {
 			    return false;
             }
