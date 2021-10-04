@@ -242,7 +242,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
     		    //hide all but the last
     		    jQuery(\'.stcoakbles_add_customfield\').hide();
     		    jQuery(\'#stcoakbles_add_customfield'.$row.'\').show();
-        		jQuery(\'.stcoakbles_add_customfield\').on(\'click\',function(){
+        		jQuery(\'#stcoakbles_add_customfield'.$row.'\').on(\'click\',function(){
     		        if(typeof nextCustom !=\'undefined\') {
     		              var counter=nextCustom;
     		              nextCustom++
