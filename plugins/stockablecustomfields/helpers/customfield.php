@@ -386,7 +386,7 @@ Class CustomfieldStockablecustomfield
      * @return bool
      * @since 1.5.1
      */
-    public static function deleteProductCustomfields($custom_id, $product_id, $fieldName, $operator = '=', $fieldValue)
+    public static function deleteProductCustomfields($custom_id, $product_id, $fieldName, $operator = '=', $fieldValue = null)
     {
         // validate the passed operator
         $operator = trim(strtoupper($operator));

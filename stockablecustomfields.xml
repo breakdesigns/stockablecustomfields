@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="3.8.0" type="plugin" group="vmcustom" method="upgrade">
 	<name>Stockable Customfields</name>
-	<creationDate>2021-01-28</creationDate>
+	<creationDate>2021-10-04</creationDate>
 	<author>breadkesigns</author>
 	<authorEmail>info@breakdesigns.net</authorEmail>
 	<authorUrl>http://www.breakdesigns.net</authorUrl>
 	<copyright>Copyright(c) 2015-2021 breakdesigns.net</copyright>
 	<license>GNU/GPL v.2</license>
 	<version>1.5.2beta1</version>
-	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.5.2beta1 | 28 January 2021)</i></h3>
+	<description><![CDATA[<h3>Stockables Customfields<i style="font-size:12px"> (v.1.5.2beta1 | 04 October 2021)</i></h3>
     <span><img src="../plugins/vmcustom/stockablecustomfields/assets/images/logo_stockables.png"/></span>
     <p style="margin-top:5px; font-size:12px; font-weight:0;">Create stockable variations using custom fields</p>
     <p><a href="https://breakdesigns.net/extensions/joomla/stockable-custom-fields/documentation" target="_blank">Please check our Manual to see how to proceed further</a>
@@ -18,7 +18,8 @@
 
 	<!-- Update servers -->
 	<updateservers>
-		<server type="extension" priority="1" name="Stockable Customfields">https://breakdesigns.net/index.php?option=com_ars&amp;view=update&amp;task=stream&amp;format=xml&amp;id=4
+		<server type="extension" priority="1" name="Stockable Customfields">
+			https://cdn.breakdesigns.net/release/stockablecustomfields/update.xml
 		</server>
 	</updateservers>
 

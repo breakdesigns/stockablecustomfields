@@ -251,7 +251,7 @@ class plgVmCustomStockablecustomfields extends vmCustomPlugin
                           var counter=Virtuemart.nextCustom;
     		              Virtuemart.nextCustom++;
 		              }
-    		       	jQuery.getJSON(\''.JURI::root(false).'administrator/index.php?option=com_virtuemart&view=product&task=getData&format=json&virtuemart_product_id='.$product_id.'&type=fields&id='.$parent_custom_id.'&row=\'+counter,
+    		       	jQuery.getJSON(\''.Uri::root(false).'administrator/index.php?option=com_virtuemart&view=product&task=getData&format=json&virtuemart_product_id='.$product_id.'&type=fields&id='.$parent_custom_id.'&row=\'+counter,
             		function(data) {
             			jQuery.each(data.value, function(index, value){
             				jQuery(\'#custom_field\').append(value);
